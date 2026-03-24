@@ -60,7 +60,6 @@ graph TB
     subgraph App["ETL App Service :8081"]
         AppCtrl["SwiggyAppController"]
         AppSvc["SwiggyAppService"]
-        RestClient["RestaurantServiceClient"]
         AppCtrl --> AppSvc
         AppSvc -.-> RestClient
     end
@@ -151,7 +150,6 @@ No se registra a sí mismo (`register-with-eureka: false`, `fetch-registry: fals
 |-------------------|----------------------------|----------------------------|
 | `/auth/**`        | IDENTITY-SERVICE (lb)      | No (ruta abierta)          |
 | `/swiggy/**`      | SWIGGY-APP (lb)            | Sí (AuthenticationFilter)  |
-| `/restaurant/**`  | RESTAURANT-SERVICE (lb)    | Sí (AuthenticationFilter)  |
 
 **Rutas abiertas (sin autenticación):** `/auth/register`, `/auth/token`, `/eureka`
 
@@ -161,7 +159,7 @@ No se registra a sí mismo (`register-with-eureka: false`, `fetch-registry: fals
 |------------------|--------------------------------------|
 | **Puerto**       | 9898                                 |
 | **Función**      | Registro, login, generación de JWT   |
-| **Base de datos**| H2 (en memoria)                      |
+| **Base de datos**| MySql                                |
 | **Seguridad**    | Spring Security + BCrypt + JWT HS256 |
 
 ```mermaid
@@ -210,7 +208,7 @@ graph LR
     end
 
     subgraph Datos
-        H2["H2 Database"]
+        MYSQL["MySql Database"]
         JPA["Spring Data JPA"]
     end
 
@@ -221,7 +219,7 @@ graph LR
     SS --> JWT
     SS --> BC
     SB --> JPA
-    JPA --> H2
+    JPA --> MYSQL
 ```
 
 | Componente              | Tecnología                              |
@@ -232,7 +230,7 @@ graph LR
 | Gateway                 | Spring Cloud Gateway (WebFlux)          |
 | Service Discovery       | Netflix Eureka                          |
 | Seguridad               | Spring Security + JWT (HS256)           |
-| Base de Datos           | H2 (en memoria, desarrollo)            |
+| Base de Datos           | MySQl                                   |
 | ORM                     | Spring Data JPA                         |
 | Build                   | Maven                                   |
 | Utilidades              | Lombok                                  |
