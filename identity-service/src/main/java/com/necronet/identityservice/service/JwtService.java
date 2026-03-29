@@ -1,48 +1,124 @@
 package com.necronet.identityservice.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.userdetails.UserDetails;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 @Component
+@Slf4j
 public class JwtService {
 
+    @Value("${jwt.secret}")
+    private String SECRET;
 
-    public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+    @Value("${jwt.expiration}")
+    private long EXPIRATION;
 
+    @Value("${jwt.refresh-expiration}")
+    private long REFRESH_EXPIRATION;
 
-    public void validateToken(final String token) {
-        Jwts.parser().setSigningKey(getSignKey()).build().parseClaimsJws(token);
+    private final Set<String> tokenBlacklist = ConcurrentHashMap.newKeySet();
+
+    public boolean validateToken(String token) {
+        try {
+            if (tokenBlacklist.contains(token)) {
+                return false;
+            }
+            Jwts.parser()
+                    .setSigningKey(getSignKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
+            return false;
+        }
     }
 
+    public boolean validateRefreshToken(String refreshToken, String username) {
+        try {
+            if (tokenBlacklist.contains(refreshToken)) {
+                return false;
+            }
+            Claims claims = Jwts.parser()
+                    .setSigningKey(getSignKey())
+                    .build()
+                    .parseClaimsJws(refreshToken)
+                    .getBody();
 
-    public String generateToken(String userName) {
+            String subject = claims.getSubject();
+            boolean isRefreshToken = claims.get("type", String.class).equals("refresh");
+
+            return subject.equals(username) && isRefreshToken;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid refresh token: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userName);
+        claims.put("type", "access");
+        return createToken(claims, username, EXPIRATION);
     }
 
-    private String createToken(Map<String, Object> claims, String userName) {
+    public String generateRefreshToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+        return createToken(claims, username, REFRESH_EXPIRATION);
+    }
+
+    private String createToken(Map<String, Object> claims, String username, long expiration) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(userName)
+                .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = Jwts.parser()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claimsResolver.apply(claims);
     }
 
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public void addToBlacklist(String token) {
+        tokenBlacklist.add(token);
+    }
+
+    public void cleanupBlacklist() {
+        tokenBlacklist.removeIf(token -> {
+            try {
+                return extractExpiration(token).before(new Date());
+            } catch (Exception e) {
+                return true;
+            }
+        });
     }
 }
