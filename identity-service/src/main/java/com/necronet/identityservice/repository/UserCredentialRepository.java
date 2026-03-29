@@ -2,9 +2,14 @@ package com.necronet.identityservice.repository;
 
 import com.necronet.identityservice.entity.UserCredential;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-public interface UserCredentialRepository  extends JpaRepository<UserCredential,Integer> {
-    Optional<UserCredential> findByName(String username);
+@Repository
+public interface UserCredentialRepository extends JpaRepository<UserCredential, Long> {
+    Optional<UserCredential> findByUsername(String username);
+    Optional<UserCredential> findByEmail(String email);
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }
