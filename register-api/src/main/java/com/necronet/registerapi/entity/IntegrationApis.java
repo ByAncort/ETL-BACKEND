@@ -1,62 +1,51 @@
 package com.necronet.registerapi.entity;
 
+import com.necronet.registerapi.entity.enums.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "integration_apis")
 public class IntegrationApis {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(length = 500)
     private String description;
 
-    @Column(name = "source_system", nullable = false, length = 50)
-    private String sourceSystem;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ExecutionMode executionMode;
 
-    @Column(name = "data_domain", length = 50)
-    private String dataDomain;
+    // Campos para ejecución programada
+    @Enumerated(EnumType.STRING)
+    private ScheduleFrequency scheduleFrequency;
 
-    @Column(name = "update_frequency", length = 20)
-    private String updateFrequency;
+    private String cronExpression;
 
-    // Relaciones
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "api_input_id", referencedColumnName = "id")
-    private ApiInput apiInput;
+    private LocalDateTime nextExecutionTime;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "api_output_id", referencedColumnName = "id")
-    private ApiOutput apiOutput;
+    private Boolean active = true;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "auth_config_id", referencedColumnName = "id")
-    private AuthConfig authConfig;
+    @JoinColumn(name = "input_endpoint_id")
+    private EndpointConfig inputEndpoint;
 
-    @OneToMany(mappedBy = "integrationApi", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ApiCallHistory> callHistory;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "output_endpoint_id")
+    private EndpointConfig outputEndpoint;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
-
-    @Column(name = "ml_feature_tags", length = 500)
-    private String mlFeatureTags;
-
-    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -69,5 +58,4 @@ public class IntegrationApis {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 }
