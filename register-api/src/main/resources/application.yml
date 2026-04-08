@@ -2,18 +2,18 @@ spring:
   application:
     name: register-api
   datasource:
-    url: jdbc:h2:mem:etldb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:mysql://localhost:3306/registry_api
+    username: root
+    password: 1290
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
 
 logging:
   level:
