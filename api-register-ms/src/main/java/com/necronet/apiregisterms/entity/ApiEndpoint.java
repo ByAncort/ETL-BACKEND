@@ -14,4 +14,6 @@ import java.time.LocalDateTime;
 public class ApiEndpoint extends Apis {
     private String pathParams; // Ej: "/users/{id}"
     private String queryParams; // Ej: "?page=1&size=10"
+    @Column(columnDefinition = "TEXT")
+    private String body;
 }

@@ -19,6 +19,7 @@ public class ApiResponse {
     private String description;
     private String pathParams;
     private String queryParams;
+    private String body;
     private LocalDateTime createdAt;
     private AuthType authType;
     private String authHeader;

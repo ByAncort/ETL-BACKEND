@@ -16,6 +16,7 @@ public class ApiUpdateRequest {
     private String description;
     private String pathParams;
     private String queryParams;
+    private String body;
 
     private AuthType authType;
     private String authHeader;

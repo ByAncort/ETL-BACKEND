@@ -42,6 +42,7 @@ public class ApiService {
                 .description(request.getDescription())
                 .pathParams(request.getPathParams())
                 .queryParams(request.getQueryParams())
+                .body(request.getBody())
                 .createdAt(LocalDateTime.now())
                 .authApi(authApi)
                 .build();
@@ -98,6 +99,7 @@ public class ApiService {
                 .description(api.getDescription())
                 .pathParams(api instanceof ApiEndpoint ? ((ApiEndpoint) api).getPathParams() : null)
                 .queryParams(api instanceof ApiEndpoint ? ((ApiEndpoint) api).getQueryParams() : null)
+                .body(api instanceof ApiEndpoint ? ((ApiEndpoint) api).getBody() : null)
                 .createdAt(api.getCreatedAt())
                 .authType(authType)
                 .authHeader(authHeader)
@@ -145,6 +147,7 @@ public class ApiService {
                 .description(authApi.getDescription())
                 .pathParams(authApi instanceof ApiEndpoint ? ((ApiEndpoint) authApi).getPathParams() : null)
                 .queryParams(authApi instanceof ApiEndpoint ? ((ApiEndpoint) authApi).getQueryParams() : null)
+                .body(authApi instanceof ApiEndpoint ? ((ApiEndpoint) authApi).getBody() : null)
                 .authType(authType)
                 .authHeader(authHeader)
                 .authValue(authValue)
@@ -177,6 +180,7 @@ public class ApiService {
             ApiEndpoint endpoint = (ApiEndpoint) api;
             if (request.getPathParams() != null) endpoint.setPathParams(request.getPathParams());
             if (request.getQueryParams() != null) endpoint.setQueryParams(request.getQueryParams());
+            if (request.getBody() != null) endpoint.setBody(request.getBody());
         }
 
         if (request.getAuthType() != null && request.getAuthType() != AuthType.NONE) {
@@ -222,6 +226,7 @@ public class ApiService {
             ApiEndpoint endpoint = (ApiEndpoint) authApi;
             if (request.getPathParams() != null) endpoint.setPathParams(request.getPathParams());
             if (request.getQueryParams() != null) endpoint.setQueryParams(request.getQueryParams());
+            if (request.getBody() != null) endpoint.setBody(request.getBody());
         }
 
         if (request.getAuthType() != null && request.getAuthType() != AuthType.NONE) {
@@ -281,6 +286,7 @@ public class ApiService {
                 .description(request.getDescription())
                 .pathParams(request.getPathParams())
                 .queryParams(request.getQueryParams())
+                .body(request.getBody())
                 .createdAt(LocalDateTime.now())
                 .build();
 
