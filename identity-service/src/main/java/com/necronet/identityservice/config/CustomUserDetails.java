@@ -48,6 +48,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
+        // En una implementación real validar el status Enum.
         return true;
     }
 }

@@ -159,17 +159,31 @@ No se registra a sí mismo (`register-with-eureka: false`, `fetch-registry: fals
 |------------------|--------------------------------------|
 | **Puerto**       | 9898                                 |
 | **Función**      | Registro, login, generación de JWT   |
-| **Base de datos**| MySql                                |
+| **Base de datos**| PostgreSQL                           |
 | **Seguridad**    | Spring Security + BCrypt + JWT HS256 |
 
 ```mermaid
 erDiagram
-    USER_CREDENTIAL {
-        int id PK
-        string name
-        string email
-        string password
+    user {
+        bigint id PK
+        varchar username
+        varchar email
+        varchar password_hash
+        varchar first_name
+        varchar last_name
+        UserStatusEnum status
     }
+    role {
+        bigint id PK
+        RoleEnum name
+        varchar description
+    }
+    user_role {
+        bigint usuario_id FK
+        bigint rol_id FK
+    }
+    user ||--o{ user_role : "has"
+    role ||--o{ user_role : "assigned to"
 ```
 
 ### 4. ETL App Service (Lógica de Negocio)
@@ -208,7 +222,7 @@ graph LR
     end
 
     subgraph Datos
-        MYSQL["MySql Database"]
+        DB["PostgreSQL Database"]
         JPA["Spring Data JPA"]
     end
 
@@ -219,7 +233,7 @@ graph LR
     SS --> JWT
     SS --> BC
     SB --> JPA
-    JPA --> MYSQL
+    JPA --> DB
 ```
 
 | Componente              | Tecnología                              |
@@ -230,7 +244,7 @@ graph LR
 | Gateway                 | Spring Cloud Gateway (WebFlux)          |
 | Service Discovery       | Netflix Eureka                          |
 | Seguridad               | Spring Security + JWT (HS256)           |
-| Base de Datos           | MySQl                                   |
+| Base de Datos           | PostgreSQL                              |
 | ORM                     | Spring Data JPA                         |
 | Build                   | Maven                                   |
 | Utilidades              | Lombok                                  |

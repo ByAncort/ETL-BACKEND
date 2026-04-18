@@ -25,8 +25,7 @@ public class AuthService {
         }
 
         credential.setPassword(passwordEncoder.encode(credential.getPassword()));
-        credential.setRole("USER");
-        credential.setEnabled(true);
+        credential.setStatus(com.necronet.identityservice.entity.UserStatusEnum.ACTIVE);
         repository.save(credential);
         return "User registered successfully";
     }
