@@ -20,6 +20,7 @@ public class ApiService {
     private final MethodRepository methodRepository;
     private final HeaderRepository headerRepository;
     private final AuthConfigRepository authConfigRepository;
+    private final AuthCredentialRepository authCredentialRepository;
 
     @Transactional
     public Apis registerApi(ApiRegisterRequest request) {
@@ -57,11 +58,16 @@ public class ApiService {
                             .value(request.getAuthHeader() != null ? request.getAuthHeader() : "Authorization")
                             .build()));
 
+            AuthCredential authCredential = AuthCredential.builder()
+                    .credentialValue(request.getAuthValue())
+                    .build();
+            authCredentialRepository.save(authCredential);
+
             AuthConfig authConfig = AuthConfig.builder()
                     .api(savedApi)
                     .authType(request.getAuthType())
                     .header(header)
-                    .credentialValue(request.getAuthValue())
+                    .authCredential(authCredential)
                     .username(request.getUsername())
                     .password(request.getPassword())
                     .tokenEndpoint(request.getTokenEndpoint())
@@ -105,7 +111,8 @@ public class ApiService {
                 .authHeader(authHeader)
                 .authApiId(authApiId)
                 .authApiUrl(authApiUrl)
-                .authValue(api.getAuthConfig() != null ? api.getAuthConfig().getCredentialValue() : null)
+                .authValue(api.getAuthConfig() != null && api.getAuthConfig().getAuthCredential() != null
+                        ? api.getAuthConfig().getAuthCredential().getCredentialValue() : null)
                 .build();
     }
 
@@ -117,7 +124,8 @@ public class ApiService {
             return null;
         }
 
-        return api.getAuthApi().getAuthConfig().getCredentialValue();
+        return api.getAuthApi().getAuthConfig().getAuthCredential() != null
+                ? api.getAuthApi().getAuthConfig().getAuthCredential().getCredentialValue() : null;
     }
 
     public ApiResponse getAuthApiResponse(Long apiId) {
@@ -138,7 +146,8 @@ public class ApiService {
             authHeader = authApi.getAuthConfig().getHeader() != null 
                     ? authApi.getAuthConfig().getHeader().getValue()
                     : null;
-            authValue = authApi.getAuthConfig().getCredentialValue();
+            authValue = authApi.getAuthConfig().getAuthCredential() != null
+                    ? authApi.getAuthConfig().getAuthCredential().getCredentialValue() : null;
         }
 
         return ApiResponse.builder()
@@ -197,7 +206,15 @@ public class ApiService {
                 authConfig.setHeader(header);
             }
             
-            if (request.getAuthValue() != null) authConfig.setCredentialValue(request.getAuthValue());
+            if (request.getAuthValue() != null) {
+                AuthCredential authCredential = authConfig.getAuthCredential();
+                if (authCredential == null) {
+                    authCredential = AuthCredential.builder().build();
+                    authConfig.setAuthCredential(authCredential);
+                }
+                authCredential.setCredentialValue(request.getAuthValue());
+                authCredentialRepository.save(authCredential);
+            }
             if (request.getUsername() != null) authConfig.setUsername(request.getUsername());
             if (request.getPassword() != null) authConfig.setPassword(request.getPassword());
             if (request.getTokenEndpoint() != null) authConfig.setTokenEndpoint(request.getTokenEndpoint());
@@ -243,7 +260,15 @@ public class ApiService {
                 authConfig.setHeader(header);
             }
             
-            if (request.getAuthValue() != null) authConfig.setCredentialValue(request.getAuthValue());
+            if (request.getAuthValue() != null) {
+                AuthCredential authCredential = authConfig.getAuthCredential();
+                if (authCredential == null) {
+                    authCredential = AuthCredential.builder().build();
+                    authConfig.setAuthCredential(authCredential);
+                }
+                authCredential.setCredentialValue(request.getAuthValue());
+                authCredentialRepository.save(authCredential);
+            }
             if (request.getUsername() != null) authConfig.setUsername(request.getUsername());
             if (request.getPassword() != null) authConfig.setPassword(request.getPassword());
             if (request.getTokenEndpoint() != null) authConfig.setTokenEndpoint(request.getTokenEndpoint());
@@ -300,11 +325,16 @@ public class ApiService {
                             .value(request.getAuthHeader() != null ? request.getAuthHeader() : "Authorization")
                             .build()));
 
+            AuthCredential authCredential = AuthCredential.builder()
+                    .credentialValue(request.getAuthValue())
+                    .build();
+            authCredentialRepository.save(authCredential);
+
             AuthConfig authConfig = AuthConfig.builder()
                     .api(savedAuthApi)
                     .authType(request.getAuthType())
                     .header(header)
-                    .credentialValue(request.getAuthValue())
+                    .authCredential(authCredential)
                     .username(request.getUsername())
                     .password(request.getPassword())
                     .tokenEndpoint(request.getTokenEndpoint())

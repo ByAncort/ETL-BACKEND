@@ -25,7 +25,9 @@ public class AuthConfig {
     @JoinColumn(name = "header_id")
     private Header header; // Normalmente "Authorization"
 
-    private String credentialValue; // Para Bearer: token, para Basic: base64("user:pass")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "auth_credential_id")
+    private AuthCredential authCredential;
 
     // Campos adicionales para diferentes tipos de auth
     private String username; // Para Basic Auth
