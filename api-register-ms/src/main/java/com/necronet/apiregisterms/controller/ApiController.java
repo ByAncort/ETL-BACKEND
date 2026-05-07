@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/register")
+@RequestMapping("/api-registry")
 @RequiredArgsConstructor
 public class ApiController {
 
