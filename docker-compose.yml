@@ -112,6 +112,9 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - JAVA_OPTS=-Xmx512m -Xms256m
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/registry_api?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
     ports:
       - "8082:8082"
     healthcheck:
@@ -133,6 +136,10 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - JAVA_OPTS=-Xmx512m -Xms256m
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/registry_api?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
     ports:
       - "8083:8083"
     healthcheck:
@@ -146,6 +153,8 @@ services:
       - integration-ms
     networks:
       - swiggy-network
+
+     
 
   schema-matching-ms:
     build:
