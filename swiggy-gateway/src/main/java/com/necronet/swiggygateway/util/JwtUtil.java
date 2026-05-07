@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
+import java.security.Key;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +24,7 @@ public class JwtUtil {
 
     private final Set<String> tokenBlacklist = ConcurrentHashMap.newKeySet();
 
-    private SecretKey getSignKey() {
+    private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -42,10 +42,10 @@ public class JwtUtil {
             }
 
             Claims claims = Jwts.parser()
-                    .verifyWith(getSignKey())
+                    .setSigningKey(getSignKey())
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                    .parseClaimsJws(token)
+                    .getBody();
 
             Date expiration = claims.getExpiration();
             if (expiration.before(new Date())) {
@@ -86,10 +86,10 @@ public class JwtUtil {
     public String extractUsername(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith(getSignKey())
+                    .setSigningKey(getSignKey())
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                    .parseClaimsJws(token)
+                    .getBody();
             return claims.getSubject();
         } catch (Exception e) {
             log.error("Failed to extract username from token: {}", e.getMessage());
@@ -100,10 +100,10 @@ public class JwtUtil {
     public String extractRoles(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith(getSignKey())
+                    .setSigningKey(getSignKey())
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                    .parseClaimsJws(token)
+                    .getBody();
             return claims.get("roles", String.class);
         } catch (Exception e) {
             log.warn("No roles found in token");
@@ -114,10 +114,10 @@ public class JwtUtil {
     public Date extractExpiration(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith(getSignKey())
+                    .setSigningKey(getSignKey())
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                    .parseClaimsJws(token)
+                    .getBody();
             return claims.getExpiration();
         } catch (Exception e) {
             log.error("Failed to extract expiration from token: {}", e.getMessage());

@@ -22,10 +22,32 @@ spring:
           filters:
             - AuthenticationFilter
 
-        - id: restaurant-service
-          uri: lb://RESTAURANT-SERVICE
+
+        - id: schema-matching-ms
+          uri: lb://SCHEMA-MATCHING-MS
           predicates:
-            - Path=/restaurant/**
+            - Path=/schema/**
+          filters:
+            - AuthenticationFilter
+
+        - id: user-registry-ms
+          uri: lb://USER-REGISTRY-MS
+          predicates:
+            - Path=/users/**
+          filters:
+            - AuthenticationFilter
+
+        - id: integration-ms
+          uri: lb://INTEGRATION-MS
+          predicates:
+            - Path=/integrations/**
+          filters:
+            - AuthenticationFilter
+
+        - id: api-register-ms
+          uri: lb://API-REGISTER-MS
+          predicates:
+            - Path=/api-registry/**
           filters:
             - AuthenticationFilter
 

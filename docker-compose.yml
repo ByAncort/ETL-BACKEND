@@ -1,0 +1,189 @@
+version: '3.8'
+
+services:
+  # MySQL comentado - usando el local
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: swiggy-mysql
+  #   ...
+
+  eureka:
+    build:
+      context: ./swiggy-service-registry
+      dockerfile: Dockerfile
+    container_name: swiggy-eureka
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - swiggy-network
+    # Eureka no depende de MySQL
+
+  identity-service:
+    build:
+      context: ./identity-service
+      dockerfile: Dockerfile
+    container_name: swiggy-identity
+    environment:
+      - JWT_SECRET=5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+      - JWT_EXPIRATION=1800000
+      - JWT_REFRESH_EXPIRATION=604800000
+      # Usando host.docker.internal para acceder a MySQL local
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    ports:
+      - "9898:9898"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9898/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - eureka
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Para acceder al host desde Docker
+    networks:
+      - swiggy-network
+
+  gateway:
+    build:
+      context: ./swiggy-gateway
+      dockerfile: Dockerfile
+    container_name: swiggy-gateway
+    environment:
+      - JWT_SECRET=5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+      - JWT_EXPIRATION=1800000
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - eureka
+      - identity-service
+    networks:
+      - swiggy-network
+
+  user-registry-ms:
+    build:
+      context: ./user-registry-ms
+      dockerfile: Dockerfile
+    container_name: swiggy-user-registry
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - IDENTITY_SERVICE_URL=http://identity-service:9898
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - eureka
+      - identity-service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - swiggy-network
+
+  integration-ms:
+    build:
+      context: ./integration-ms
+      dockerfile: Dockerfile
+    container_name: swiggy-integration
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/registry_api?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - eureka
+      - identity-service
+    networks:
+      - swiggy-network
+
+  api-register-ms:
+    build:
+      context: ./api-register-ms
+      dockerfile: Dockerfile
+    container_name: swiggy-api-register
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/registry_api?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - eureka
+      - identity-service
+      - integration-ms
+    networks:
+      - swiggy-network
+
+     
+
+  schema-matching-ms:
+    build:
+      context: ./schema-matching-ms
+      dockerfile: Dockerfile
+    container_name: swiggy-schema-matching
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/schema_matching?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - EXTERNAL_API_BASE_URL=http://integration-ms:8082
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - eureka
+      - identity-service
+      - integration-ms
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - swiggy-network
+
+networks:
+  swiggy-network:
+    driver: bridge
