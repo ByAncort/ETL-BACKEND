@@ -55,7 +55,7 @@ public class JwtService {
                     .getBody();
 
             String subject = claims.getSubject();
-            boolean isRefreshToken = claims.get("type", String.class).equals("refresh");
+            boolean isRefreshToken = "refresh".equals(claims.get("type", String.class));
 
             return subject.equals(username) && isRefreshToken;
         } catch (JwtException | IllegalArgumentException e) {
