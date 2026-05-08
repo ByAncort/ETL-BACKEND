@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -47,14 +46,17 @@ public class AuthController {
             );
 
             if (authenticate.isAuthenticated()) {
-                String accessToken = authService.generateToken(authRequest.getUsername());
-                String refreshToken = authService.generateRefreshToken(authRequest.getUsername());
+                String authenticatedUsername = authenticate.getName();
+                String accessToken = authService.generateToken(authenticatedUsername);
+                String refreshToken = authService.generateRefreshToken(authenticatedUsername);
                 return ResponseEntity.ok(new AuthResponse("Authentication successful", accessToken, refreshToken));
             } else {
-                throw new BadCredentialsException("Invalid credentials");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse("Invalid username/email or password", null, null));
             }
         } catch (BadCredentialsException e) {
-            throw new BadCredentialsException("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse("Invalid username/email or password", null, null));
         }
     }
 
