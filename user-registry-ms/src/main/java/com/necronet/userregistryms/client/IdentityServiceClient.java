@@ -18,7 +18,7 @@ public class IdentityServiceClient {
     public AuthResponse registerUserInIdentityService(String username, String email, String password) {
         try {
             String url = IDENTITY_SERVICE_URL + "/register";
-            RegisterRequest request = new RegisterRequest(username, email, password);
+            RegisterRequest request = new RegisterRequest(username, email, password, false);
 
             // Configurar headers
             HttpHeaders headers = new HttpHeaders();
@@ -86,6 +86,22 @@ public class IdentityServiceClient {
         } catch (Exception e) {
             log.error("Error validating token with identity-service: {}", e.getMessage());
             return false;
+        }
+    }
+
+    public void enableUser(String username) {
+        try {
+            String url = IDENTITY_SERVICE_URL + "/enable/" + username;
+
+            // Para GET no necesitas body ni headers especiales
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+
+            log.info("User enabled in identity-service. Response status: {}", response.getStatusCode());
+            log.info("User {} enabled successfully", username);
+
+        } catch (Exception e) {
+            log.error("Error enabling user in identity-service: {}", e.getMessage());
+            throw new RuntimeException("Failed to enable user in identity service", e);
         }
     }
 }

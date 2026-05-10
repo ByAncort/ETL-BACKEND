@@ -49,6 +49,13 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
+UserRole userRole = new UserRole();
+        userRole.setUsuarioId(savedUser.getId());
+        userRole.setRolId(4L);
+        userRole.setAssignedBy(1L);
+        userRoleRepository.save(userRole);
+        log.info("Role ROLE_GUEST assigned to user {}", savedUser.getUsername());
+
         identityServiceClient.registerUserInIdentityService(
                 userRequest.getUsername(),
                 userRequest.getEmail(),
@@ -66,10 +73,10 @@ public class UserService {
     }
 
     public UserResponse getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
-        return mapToResponse(user);
+
+        return mapToResponse(userRepository.findUserByUsername(username));
     }
+
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
@@ -124,7 +131,12 @@ public class UserService {
         user.setEmailVerifiedAt(LocalDateTime.now());
         user.setStatus(UserStatus.active);
         userRepository.save(user);
-        log.info("Email verified for user: {}", user.getUsername());
+        try {
+            identityServiceClient.enableUser(user.getUsername());
+        } catch (Exception e) {
+            log.error("Error al habilitar login de Usuario: {} error: {}",user.getUsername(),e.getMessage());
+        }
+        log.info("Email verified and user enabled for: {}", user.getUsername());
     }
 
     @Transactional
