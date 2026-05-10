@@ -3,30 +3,17 @@ spring:
     name: swiggy-gateway
   cloud:
     gateway:
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
-      globalcors:
-        add-to-simple-url-handler-mapping: true
-        cors-configurations:
-          '[/**]':
-            allowedOrigins:
-              - http://localhost:5173
-              - http://127.0.0.1:5173
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - Authorization
-            maxAge: 3600
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
       routes:
         - id: identity-service
           uri: lb://IDENTITY-SERVICE
@@ -42,24 +29,25 @@ spring:
           filters:
             - AuthenticationFilter
 
+
         - id: schema-matching-ms
           uri: lb://SCHEMA-MATCHING-MS
           predicates:
-            - Path=/api/schema-matches/**
+            - Path=/schema/**
           filters:
             - AuthenticationFilter
 
         - id: user-registry-ms
           uri: lb://USER-REGISTRY-MS
           predicates:
-            - Path=/api/users/**,/api/roles/**,/api/user-roles/**
+            - Path=/api/users/**
           filters:
             - AuthenticationFilter
 
         - id: integration-ms
           uri: lb://INTEGRATION-MS
           predicates:
-            - Path=/api/integrations/**
+            - Path=/integrations/**
           filters:
             - AuthenticationFilter
 

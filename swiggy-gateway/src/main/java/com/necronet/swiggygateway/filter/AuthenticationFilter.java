@@ -32,11 +32,6 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
             log.debug("Processing request: {} {}", method, path);
 
-            // Skip OPTIONS requests (CORS preflight)
-            if ("OPTIONS".equalsIgnoreCase(method)) {
-                log.debug("Skipping OPTIONS request");
-                return chain.filter(exchange);
-            }
 
             // Check if route should be secured
             if (!routeValidator.isSecured.test(request)) {
