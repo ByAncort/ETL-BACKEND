@@ -11,6 +11,7 @@ import java.security.Key;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -64,16 +65,30 @@ public class JwtService {
         }
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, Set<String> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "access");
+        claims.put("roles", roles);
         return createToken(claims, username, EXPIRATION);
     }
 
-    public String generateRefreshToken(String username) {
+    public String generateToken(String username, String role) {
+        return generateToken(username, Set.of(role));
+    }
+
+    public String generateToken(String username) {
+        return generateToken(username, Set.of("ROLE_USER"));
+    }
+
+    public String generateRefreshToken(String username, Set<String> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "refresh");
+        claims.put("roles", roles);
         return createToken(claims, username, REFRESH_EXPIRATION);
+    }
+
+    public String generateRefreshToken(String username) {
+        return generateRefreshToken(username, Set.of("ROLE_USER"));
     }
 
     private String createToken(Map<String, Object> claims, String username, long expiration) {
@@ -88,6 +103,18 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public Set<String> extractRoles(String token) {
+        Object roles = extractClaim(token, claims -> claims.get("roles"));
+        if (roles instanceof List<?> list) {
+            return list.stream()
+                    .filter(r -> r instanceof String)
+                    .map(r -> (String) r)
+                    .collect(Collectors.toCollection(HashSet::new));
+        }
+        String role = extractClaim(token, claims -> claims.get("role", String.class));
+        return role != null ? Set.of(role) : Collections.emptySet();
     }
 
     public Date extractExpiration(String token) {
