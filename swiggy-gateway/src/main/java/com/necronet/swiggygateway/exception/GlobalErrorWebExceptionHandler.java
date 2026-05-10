@@ -19,8 +19,11 @@ import java.time.format.DateTimeFormatter;
 @Order(-2)
 public class GlobalErrorWebExceptionHandler implements ErrorWebExceptionHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalErrorWebExceptionHandler.class);
+
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        log.error("Error handling request: {} - {}", ex.getClass().getName(), ex.getMessage(), ex);
         ServerHttpResponse response = exchange.getResponse();
 
         if (response.isCommitted()) {

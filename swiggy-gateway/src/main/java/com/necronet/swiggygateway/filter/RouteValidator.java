@@ -5,6 +5,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 @Component
@@ -13,6 +14,8 @@ public class RouteValidator {
 
     // These endpoints are OPEN - no authentication required
     private static final List<String> OPEN_API_ENDPOINTS = List.of(
+            "/api/users/register",
+            "/api/users/login",
             "/api/v1/auth/register",
             "/api/v1/auth/token",
             "/api/v1/auth/refresh",
@@ -31,7 +34,11 @@ public class RouteValidator {
     );
 
     public Predicate<ServerHttpRequest> isSecured = request -> {
-        String path = request.getURI().getPath();
+        String path = request.getURI() != null ? request.getURI().getPath() : null;
+        if (path == null) {
+            log.warn("Path is null, defaulting to secured");
+            return true;
+        }
         String method = request.getMethod() != null ? request.getMethod().name() : "GET";
 
         // Always allow OPTIONS (CORS preflight)
@@ -42,9 +49,9 @@ public class RouteValidator {
         // Check if path matches any open endpoint
         boolean isOpen = OPEN_API_ENDPOINTS.stream()
                 .anyMatch(uri -> {
-                    boolean match = path.equals(uri) ||
-                            path.startsWith(uri + "/") ||
-                            path.contains(uri);
+                    boolean match = Objects.equals(path, uri) ||
+                            (uri != null && path.startsWith(uri + "/")) ||
+                            (uri != null && path.contains(uri));
                     if (match) {
                         log.debug("Open endpoint matched: {} for path: {}", uri, path);
                     }
@@ -61,7 +68,8 @@ public class RouteValidator {
     };
 
     public boolean isPublicEndpoint(String path) {
+        if (path == null) return false;
         return OPEN_API_ENDPOINTS.stream()
-                .anyMatch(uri -> path.equals(uri) || path.startsWith(uri + "/") || path.contains(uri));
+                .anyMatch(uri -> uri != null && (path.equals(uri) || path.startsWith(uri + "/") || path.contains(uri)));
     }
 }
