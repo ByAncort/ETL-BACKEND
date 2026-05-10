@@ -3,14 +3,29 @@ package com.necronet.apiregisterms.service;
 import com.necronet.apiregisterms.dto.ApiRegisterRequest;
 import com.necronet.apiregisterms.dto.ApiResponse;
 import com.necronet.apiregisterms.dto.ApiUpdateRequest;
+import com.necronet.apiregisterms.dto.TestRequest;
+import com.necronet.apiregisterms.dto.TestResponse;
 import com.necronet.apiregisterms.entity.*;
 import com.necronet.apiregisterms.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
+
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +36,7 @@ public class ApiService {
     private final HeaderRepository headerRepository;
     private final AuthConfigRepository authConfigRepository;
     private final AuthCredentialRepository authCredentialRepository;
+    private final WebClient webClient;
 
     @Transactional
     public Apis registerApi(ApiRegisterRequest request) {
@@ -162,6 +178,202 @@ public class ApiService {
                 .authValue(authValue)
                 .build();
     }
+    public List<Apis> getListApis(){
+        return apisRepository.findAll();
+    }
+
+    public TestResponse testApi(Long apiId, TestRequest request) {
+        Apis api = apisRepository.findById(apiId).orElse(null);
+        if (api == null) {
+            return TestResponse.builder()
+                    .statusCode(404)
+                    .error("API not found")
+                    .timestamp(LocalDateTime.now())
+                    .build();
+        }
+
+        String methodName = api.getMethod() != null ? api.getMethod().getName() : "GET";
+        String baseUrl = api.getUrl();
+        String pathParams = request != null && request.getPathParams() != null ? request.getPathParams() : "";
+        String queryParams = request != null && request.getQueryParams() != null ? request.getQueryParams() : "";
+        String body = request != null && request.getBody() != null ? request.getBody() : null;
+
+        if (api instanceof ApiEndpoint endpoint) {
+            if (pathParams.isEmpty() && endpoint.getPathParams() != null) pathParams = endpoint.getPathParams();
+            if (queryParams.isEmpty() && endpoint.getQueryParams() != null) queryParams = endpoint.getQueryParams();
+            if (body == null && endpoint.getBody() != null) body = endpoint.getBody();
+        }
+
+        Map<String, String> authHeaders = resolveAuthHeaders(api.getAuthConfig());
+        if (authHeaders.isEmpty() && api.getAuthApi() != null) {
+            authHeaders = resolveAuthHeaders(api.getAuthApi().getAuthConfig());
+        }
+
+        String fullUrl = baseUrl + pathParams + queryParams;
+        org.springframework.http.HttpMethod httpMethod = org.springframework.http.HttpMethod.valueOf(methodName.toUpperCase());
+        long startTime = System.currentTimeMillis();
+
+        try {
+            WebClient.RequestHeadersSpec<?> requestSpec = buildRequest(webClient, httpMethod, fullUrl, authHeaders, body, methodName);
+
+            // ✅ Todo en una sola cadena reactiva — un único .block()
+            TestResponse response = requestSpec
+                    .exchangeToMono(clientResponse -> {
+                        int statusCode = clientResponse.statusCode().value();
+
+                        Map<String, String> responseHeaders = new HashMap<>();
+                        clientResponse.headers().asHttpHeaders()
+                                .forEach((key, values) -> {
+                                    if (!values.isEmpty()) responseHeaders.put(key, values.get(0));
+                                });
+
+                        // Leer body dentro del mismo contexto reactivo
+                        return clientResponse.bodyToMono(String.class)
+                                .defaultIfEmpty("")
+                                .map(responseBody -> TestResponse.builder()
+                                        .statusCode(statusCode)
+                                        .body(responseBody.isBlank() ? null : responseBody)
+                                        .headers(responseHeaders)
+                                        .responseTimeMs(System.currentTimeMillis() - startTime)
+                                        .timestamp(LocalDateTime.now())
+                                        .build());
+                    })
+                    .timeout(Duration.ofSeconds(30))
+                    .block();
+
+            return response != null ? response : TestResponse.builder()
+                    .statusCode(500)
+                    .error("No response received")
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+        } catch (Exception e) {
+            long responseTime = System.currentTimeMillis() - startTime;
+            String errorMessage = e.getMessage();
+            int statusCode = 500;
+
+            String msg = errorMessage != null ? errorMessage.toLowerCase() : "";
+            if (msg.contains("404") || msg.contains("not found")) statusCode = 404;
+            else if (msg.contains("401") || msg.contains("unauthorized")) statusCode = 401;
+            else if (msg.contains("403") || msg.contains("forbidden")) statusCode = 403;
+            else if (msg.contains("timeout")) statusCode = 408;
+
+            return TestResponse.builder()
+                    .statusCode(statusCode)
+                    .error(errorMessage)
+                    .responseTimeMs(System.currentTimeMillis() - startTime)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+        }
+    }
+
+    private WebClient.RequestHeadersSpec<?> buildRequest(
+            WebClient webClient,
+            org.springframework.http.HttpMethod method,
+            String url,
+            Map<String, String> authHeaders,
+            String body,
+            String methodName) {
+
+        boolean supportsBody = body != null && !body.isBlank() &&
+                List.of("POST", "PUT", "PATCH", "GET").contains(methodName.toUpperCase());
+
+        if (supportsBody) {
+            WebClient.RequestBodySpec spec = webClient.method(method).uri(url);
+
+            for (Map.Entry<String, String> e : authHeaders.entrySet()) {
+                spec = spec.header(e.getKey(), e.getValue());
+            }
+
+            boolean isJson = body.trim().startsWith("{") || body.trim().startsWith("[");
+            return spec
+                    .contentType(isJson ? MediaType.APPLICATION_JSON : MediaType.TEXT_PLAIN)
+                    .bodyValue(body);
+        } else {
+            WebClient.RequestHeadersSpec<?> spec = webClient.method(method).uri(url);
+
+            for (Map.Entry<String, String> e : authHeaders.entrySet()) {
+                spec = spec.header(e.getKey(), e.getValue());
+            }
+
+            return spec;
+        }
+    }
+
+    private Map<String, String> resolveAuthHeaders(AuthConfig authConfig) {
+        Map<String, String> headers = new HashMap<>();
+
+        if (authConfig == null || authConfig.getAuthType() == null
+                || authConfig.getAuthType() == AuthType.NONE) {
+            return headers;
+        }
+
+        String headerName = authConfig.getHeader() != null
+                ? authConfig.getHeader().getValue()
+                : "Authorization";
+
+        String credentialValue = authConfig.getAuthCredential() != null
+                ? authConfig.getAuthCredential().getCredentialValue()
+                : null;
+
+        if (credentialValue == null || credentialValue.isBlank()) return headers;
+
+        switch (authConfig.getAuthType()) {
+            case BEARER -> headers.put(headerName, "Bearer " + credentialValue);
+            case BASIC -> {
+                String encoded = credentialValue.contains(":")
+                        ? Base64.getEncoder().encodeToString(credentialValue.getBytes(StandardCharsets.UTF_8))
+                        : credentialValue;
+                headers.put(headerName, "Basic " + encoded);
+            }
+            case API_KEY -> headers.put(headerName, credentialValue);
+            case OAUTH2  -> headers.put(headerName, "Bearer " + credentialValue);
+        }
+
+        return headers;
+    }
+// --- Extracted helper ---
+
+    /*private Map<String, String> resolveAuthHeaders(AuthConfig authConfig) {
+        Map<String, String> headers = new HashMap<>();
+
+        if (authConfig == null || authConfig.getAuthType() == null
+                || authConfig.getAuthType() == AuthType.NONE) {
+            return headers;
+        }
+
+        String headerName = authConfig.getHeader() != null
+                ? authConfig.getHeader().getValue()
+                : "Authorization";
+
+        String credentialValue = authConfig.getAuthCredential() != null
+                ? authConfig.getAuthCredential().getCredentialValue()
+                : null;
+
+        if (credentialValue == null || credentialValue.isBlank()) return headers;
+
+        switch (authConfig.getAuthType()) {
+            case BEARER -> headers.put(headerName, "Bearer " + credentialValue);
+
+            case BASIC -> {
+                // credentialValue can be a raw "user:pass" or already Base64-encoded
+                String encoded = credentialValue.contains(":")
+                        ? Base64.getEncoder().encodeToString(credentialValue.getBytes(StandardCharsets.UTF_8))
+                        : credentialValue;
+                headers.put(headerName, "Basic " + encoded);
+            }
+
+            case API_KEY ->
+                // headerName is whatever the API expects (e.g. "X-Api-Key")
+                    headers.put(headerName, credentialValue);
+
+            case OAUTH2 ->
+                // Token should already be resolved/refreshed before reaching here
+                    headers.put(headerName, "Bearer " + credentialValue);
+        }
+
+        return headers;
+    }*/
 
     public Apis executeRequest(Long apiId) {
         Apis api = apisRepository.findById(apiId)

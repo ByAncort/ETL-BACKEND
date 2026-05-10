@@ -3,12 +3,15 @@ package com.necronet.apiregisterms.controller;
 import com.necronet.apiregisterms.dto.ApiRegisterRequest;
 import com.necronet.apiregisterms.dto.ApiResponse;
 import com.necronet.apiregisterms.dto.ApiUpdateRequest;
+import com.necronet.apiregisterms.dto.TestRequest;
+import com.necronet.apiregisterms.dto.TestResponse;
 import com.necronet.apiregisterms.entity.Apis;
 import com.necronet.apiregisterms.service.ApiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,6 +33,21 @@ public class ApiController {
         return api != null 
                 ? ResponseEntity.ok(apiService.toResponse(api))
                 : ResponseEntity.notFound().build();
+    }
+    @GetMapping("/list")
+    public ResponseEntity<List<ApiResponse>> getApiList() {
+        List<Apis> apis = apiService.getListApis();
+        List<ApiResponse> responses = apis.stream()
+                .map(apiService::toResponse)
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
+
+    @PostMapping("/{id}/test")
+    public ResponseEntity<TestResponse> testApi(@PathVariable Long id, @RequestBody(required = false) TestRequest request) {
+        TestResponse response = apiService.testApi(id, request);
+        return ResponseEntity.status(response.getError() != null && response.getStatusCode() == 404 ? 404 : 200)
+                .body(response);
     }
 
     @GetMapping("/{id}/auth-api")
