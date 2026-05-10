@@ -3,7 +3,11 @@ package com.necronet.userregistryms.service;
 import com.necronet.userregistryms.dto.RoleRequest;
 import com.necronet.userregistryms.dto.RoleResponse;
 import com.necronet.userregistryms.entity.Role;
+import com.necronet.userregistryms.entity.User;
+import com.necronet.userregistryms.entity.UserRole;
 import com.necronet.userregistryms.repository.RoleRepository;
+import com.necronet.userregistryms.repository.UserRepository;
+import com.necronet.userregistryms.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,8 @@ import java.util.stream.Collectors;
 public class RoleService {
 
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
 
     @Transactional
     public RoleResponse createRole(RoleRequest roleRequest) {
@@ -44,6 +50,20 @@ public class RoleService {
 
     public List<RoleResponse> getAllRoles() {
         return roleRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<RoleResponse> getRolesByUsername(String username) {
+        User user = userRepository.findUserByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("User not found: " + username);
+        }
+        
+        List<UserRole> userRoles = userRoleRepository.findByUsuarioId(user.getId());
+        return userRoles.stream()
+                .map(ur -> roleRepository.findById(ur.getRolId()).orElse(null))
+                .filter(role -> role != null)
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

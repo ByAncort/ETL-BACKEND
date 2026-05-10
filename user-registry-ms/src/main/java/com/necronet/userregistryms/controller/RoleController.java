@@ -37,6 +37,12 @@ public class RoleController {
         return ResponseEntity.ok(roles);
     }
 
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<RoleResponse>> getRolesByUsername(@PathVariable String username) {
+        List<RoleResponse> roles = roleService.getRolesByUsername(username);
+        return ResponseEntity.ok(roles);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<RoleResponse> updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequest roleRequest) {
         RoleResponse response = roleService.updateRole(id, roleRequest);
