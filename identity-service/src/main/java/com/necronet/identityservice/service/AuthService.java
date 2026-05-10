@@ -1,11 +1,14 @@
 package com.necronet.identityservice.service;
 
+import com.necronet.identityservice.client.UserRegistryClient;
 import com.necronet.identityservice.entity.UserCredential;
 import com.necronet.identityservice.repository.UserCredentialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -14,6 +17,8 @@ public class AuthService {
     private final UserCredentialRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserRegistryClient userRegistryClient;
+
 
     @Transactional
     public String saveUser(UserCredential credential) {
@@ -26,16 +31,22 @@ public class AuthService {
 
         credential.setPassword(passwordEncoder.encode(credential.getPassword()));
         credential.setRole("USER");
-        credential.setEnabled(true);
+        if (credential.isEnabled()) {
+            credential.setEnabled(true);
+        } else {
+            credential.setEnabled(false);
+        }
         repository.save(credential);
         return "User registered successfully";
     }
 
     public String generateToken(String username) {
-        return jwtService.generateToken(username);
+        Set<String> roles = userRegistryClient.getUserRoles(username);
+        return jwtService.generateToken(username, roles);
     }
 
     public String generateRefreshToken(String username) {
+        Set<String> roles = userRegistryClient.getUserRoles(username);
         return jwtService.generateRefreshToken(username);
     }
 
@@ -53,5 +64,13 @@ public class AuthService {
 
     public void invalidateToken(String token) {
         jwtService.addToBlacklist(token);
+    }
+
+    @Transactional
+    public void enableUser(String username) {
+        UserCredential credential = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        credential.setEnabled(true);
+        repository.save(credential);
     }
 }

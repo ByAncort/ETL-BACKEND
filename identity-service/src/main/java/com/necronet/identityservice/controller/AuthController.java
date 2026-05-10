@@ -5,6 +5,7 @@ import com.necronet.identityservice.dto.AuthResponse;
 import com.necronet.identityservice.dto.RegisterRequest;
 import com.necronet.identityservice.entity.UserCredential;
 import com.necronet.identityservice.service.AuthService;
+import com.necronet.identityservice.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
@@ -29,6 +33,7 @@ public class AuthController {
         userCredential.setUsername(registerRequest.getUsername());
         userCredential.setEmail(registerRequest.getEmail());
         userCredential.setPassword(registerRequest.getPassword());
+        userCredential.setEnabled(registerRequest.getEnabled() != null ? registerRequest.getEnabled() : true);
 
         String response = authService.saveUser(userCredential);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -49,7 +54,8 @@ public class AuthController {
                 String authenticatedUsername = authenticate.getName();
                 String accessToken = authService.generateToken(authenticatedUsername);
                 String refreshToken = authService.generateRefreshToken(authenticatedUsername);
-                return ResponseEntity.ok(new AuthResponse("Authentication successful", accessToken, refreshToken));
+                Set<String> roles = jwtService.extractRoles(accessToken);
+                return ResponseEntity.ok(new AuthResponse("Authentication successful", accessToken, refreshToken, roles));
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new AuthResponse("Invalid username/email or password", null, null));
@@ -87,5 +93,11 @@ public class AuthController {
     public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String token) {
         authService.invalidateToken(token.replace("Bearer ", ""));
         return ResponseEntity.ok(new AuthResponse("Logged out successfully", null));
+    }
+
+    @GetMapping("/enable/{username}")
+    public ResponseEntity<AuthResponse> enableUser(@PathVariable String username) {
+        authService.enableUser(username);
+        return ResponseEntity.ok(new AuthResponse("User enabled successfully", null));
     }
 }
