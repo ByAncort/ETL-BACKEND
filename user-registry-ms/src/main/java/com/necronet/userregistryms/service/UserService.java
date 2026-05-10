@@ -32,6 +32,16 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(UserRequest userRequest) {
+        if (userRequest.getUsername() == null || userRequest.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Username cannot be empty or blank");
+        }
+        if (userRequest.getEmail() == null || userRequest.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email cannot be empty or blank");
+        }
+        if (userRequest.getPassword() == null || userRequest.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Password cannot be empty or blank");
+        }
+
         if (userRepository.existsByUsername(userRequest.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
