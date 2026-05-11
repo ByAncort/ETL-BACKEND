@@ -6,6 +6,7 @@ import com.necronet.integrationms.entity.Integration;
 import com.necronet.integrationms.repository.IntegrationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,6 +21,9 @@ public class IntegrationService {
 
     private final IntegrationRepository integrationRepository;
     private final RestTemplate restTemplate;
+
+    @Value("${api.register.ms.url}")
+    private String apiRegisterMsUrl;
 
     public IntegrationResponse createIntegration(IntegrationRequest request) {
         validateApiId(request.getApiA());
@@ -69,7 +73,7 @@ public class IntegrationService {
 
     private void validateApiId(String apiId) {
         try {
-            String url = "http://localhost:8083/api/register/" + apiId;
+            String url = apiRegisterMsUrl + "/api/register/" + apiId;
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("Invalid API ID: " + apiId);

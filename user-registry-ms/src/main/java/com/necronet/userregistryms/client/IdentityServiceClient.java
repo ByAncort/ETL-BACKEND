@@ -2,6 +2,7 @@ package com.necronet.userregistryms.client;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -13,7 +14,9 @@ import org.springframework.web.client.RestTemplate;
 public class IdentityServiceClient {
 
     private final RestTemplate restTemplate;
-    private static final String IDENTITY_SERVICE_URL = "http://localhost:9898/api/v1/auth";
+    @Value("${identity.service.url}")
+    private String IDENTITY_SERVICE_URL;
+    //private static final String IDENTITY_SERVICE_URL = "http://localhost:9898/api/v1/auth";
 
     public AuthResponse registerUserInIdentityService(String username, String email, String password) {
         try {

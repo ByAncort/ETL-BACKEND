@@ -16,7 +16,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-
+identity:
+  service:
+    url: ${IDENTITY_SERVICE_URL:http://identity-service:9898/api/v1/auth}
 eureka:
   client:
     service-url:
