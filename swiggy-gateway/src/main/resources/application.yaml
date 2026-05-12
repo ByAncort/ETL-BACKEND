@@ -32,10 +32,17 @@ spring:
             - AuthenticationFilter
 
 
+        - id: schema-matching-ms-integrations
+          uri: lb://SCHEMA-MATCHING-MS
+          predicates:
+            - Path=/api/integrations/connections/*
+          filters:
+            - AuthenticationFilter
+
         - id: schema-matching-ms
           uri: lb://SCHEMA-MATCHING-MS
           predicates:
-            - Path=/schema/**
+            - Path=/api/schema-matches/**
           filters:
             - AuthenticationFilter
 
@@ -58,7 +65,7 @@ spring:
         - id: integration-ms
           uri: lb://INTEGRATION-MS
           predicates:
-            - Path=/integrations/**
+            - Path=/api/integrations/**
           filters:
             - AuthenticationFilter
 
