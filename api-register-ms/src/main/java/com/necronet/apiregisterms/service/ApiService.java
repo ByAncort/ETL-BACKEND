@@ -16,6 +16,8 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import java.nio.charset.StandardCharsets;
@@ -37,6 +39,7 @@ public class ApiService {
     private final AuthConfigRepository authConfigRepository;
     private final AuthCredentialRepository authCredentialRepository;
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public Apis registerApi(ApiRegisterRequest request) {
@@ -182,6 +185,7 @@ public class ApiService {
         return apisRepository.findAll();
     }
 
+    @Transactional
     public TestResponse testApi(Long apiId, TestRequest request) {
         Apis api = apisRepository.findById(apiId).orElse(null);
         if (api == null) {
@@ -204,30 +208,48 @@ public class ApiService {
             if (body == null && endpoint.getBody() != null) body = endpoint.getBody();
         }
 
+        String fullUrl = baseUrl + pathParams + queryParams;
+        org.springframework.http.HttpMethod httpMethod = org.springframework.http.HttpMethod.valueOf(methodName.toUpperCase());
+
+        TestResponse response = executeHttpRequest(httpMethod, fullUrl, api, body, methodName);
+
+        if (response != null && response.getStatusCode() == 401 && canRefreshToken(api)) {
+            refreshApiToken(api);
+            response = executeHttpRequest(httpMethod, fullUrl, api, body, methodName);
+        }
+
+        return response != null ? response : TestResponse.builder()
+                .statusCode(500)
+                .error("No response received")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    private TestResponse executeHttpRequest(
+            org.springframework.http.HttpMethod httpMethod,
+            String fullUrl,
+            Apis api,
+            String body,
+            String methodName) {
+
         Map<String, String> authHeaders = resolveAuthHeaders(api.getAuthConfig());
         if (authHeaders.isEmpty() && api.getAuthApi() != null) {
             authHeaders = resolveAuthHeaders(api.getAuthApi().getAuthConfig());
         }
 
-        String fullUrl = baseUrl + pathParams + queryParams;
-        org.springframework.http.HttpMethod httpMethod = org.springframework.http.HttpMethod.valueOf(methodName.toUpperCase());
         long startTime = System.currentTimeMillis();
 
         try {
             WebClient.RequestHeadersSpec<?> requestSpec = buildRequest(webClient, httpMethod, fullUrl, authHeaders, body, methodName);
 
-            // ✅ Todo en una sola cadena reactiva — un único .block()
             TestResponse response = requestSpec
                     .exchangeToMono(clientResponse -> {
                         int statusCode = clientResponse.statusCode().value();
-
                         Map<String, String> responseHeaders = new HashMap<>();
                         clientResponse.headers().asHttpHeaders()
                                 .forEach((key, values) -> {
                                     if (!values.isEmpty()) responseHeaders.put(key, values.get(0));
                                 });
-
-                        // Leer body dentro del mismo contexto reactivo
                         return clientResponse.bodyToMono(String.class)
                                 .defaultIfEmpty("")
                                 .map(responseBody -> TestResponse.builder()
@@ -241,12 +263,7 @@ public class ApiService {
                     .timeout(Duration.ofSeconds(30))
                     .block();
 
-            return response != null ? response : TestResponse.builder()
-                    .statusCode(500)
-                    .error("No response received")
-                    .timestamp(LocalDateTime.now())
-                    .build();
-
+            return response;
         } catch (Exception e) {
             long responseTime = System.currentTimeMillis() - startTime;
             String errorMessage = e.getMessage();
@@ -261,9 +278,113 @@ public class ApiService {
             return TestResponse.builder()
                     .statusCode(statusCode)
                     .error(errorMessage)
-                    .responseTimeMs(System.currentTimeMillis() - startTime)
+                    .responseTimeMs(responseTime)
                     .timestamp(LocalDateTime.now())
                     .build();
+        }
+    }
+
+    private boolean canRefreshToken(Apis api) {
+        if (api.getAuthApi() != null) return true;
+        if (api.getAuthConfig() != null && api.getAuthConfig().getTokenEndpoint() != null
+                && api.getAuthConfig().getUsername() != null && api.getAuthConfig().getPassword() != null) {
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public void refreshApiToken(Apis api) {
+        if (api.getAuthApi() != null) {
+            String newToken = callAuthApiForToken(api.getAuthApi());
+            if (newToken != null) {
+                updateApiCredentials(api, newToken);
+            }
+            return;
+        }
+
+        AuthConfig authConfig = api.getAuthConfig();
+        if (authConfig != null && authConfig.getTokenEndpoint() != null
+                && authConfig.getUsername() != null && authConfig.getPassword() != null) {
+            String newToken = callOAuth2TokenEndpoint(authConfig);
+            if (newToken != null && authConfig.getAuthCredential() != null) {
+                authConfig.getAuthCredential().setCredentialValue(newToken);
+                authConfig.setTokenExpiry(LocalDateTime.now().plusHours(1));
+                authCredentialRepository.save(authConfig.getAuthCredential());
+                authConfigRepository.save(authConfig);
+            }
+        }
+    }
+
+    private String callAuthApiForToken(Apis authApi) {
+        String methodName = authApi.getMethod() != null ? authApi.getMethod().getName() : "POST";
+        String fullUrl = buildFullUrl(authApi);
+        String body = authApi instanceof ApiEndpoint endpoint ? endpoint.getBody() : null;
+
+        Map<String, String> authHeaders = resolveAuthHeaders(authApi.getAuthConfig());
+
+        try {
+            WebClient.RequestHeadersSpec<?> spec = buildRequest(webClient,
+                    org.springframework.http.HttpMethod.valueOf(methodName.toUpperCase()),
+                    fullUrl, authHeaders, body, methodName);
+
+            String responseBody = spec.exchangeToMono(clientResponse ->
+                            clientResponse.bodyToMono(String.class).defaultIfEmpty(""))
+                    .timeout(Duration.ofSeconds(30))
+                    .block();
+
+            return extractTokenFromResponse(responseBody);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String callOAuth2TokenEndpoint(AuthConfig authConfig) {
+        try {
+            String formBody = "grant_type=client_credentials&client_id=" + authConfig.getUsername()
+                    + "&client_secret=" + authConfig.getPassword();
+
+            String responseBody = webClient.post()
+                    .uri(authConfig.getTokenEndpoint())
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .bodyValue(formBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            return extractTokenFromResponse(responseBody);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String extractTokenFromResponse(String responseBody) {
+        if (responseBody == null || responseBody.isBlank()) return null;
+
+        try {
+            JsonNode node = objectMapper.readTree(responseBody);
+            if (node.has("access_token")) return node.get("access_token").asText();
+            if (node.has("token")) return node.get("token").asText();
+            if (node.has("data") && node.get("data").has("token")) {
+                return node.get("data").get("token").asText();
+            }
+        } catch (Exception ignored) {}
+
+        if (responseBody.startsWith("eyJ")) return responseBody;
+
+        return null;
+    }
+
+    private void updateApiCredentials(Apis api, String newToken) {
+        if (api.getAuthApi() != null && api.getAuthApi().getAuthConfig() != null
+                && api.getAuthApi().getAuthConfig().getAuthCredential() != null) {
+            api.getAuthApi().getAuthConfig().getAuthCredential().setCredentialValue(newToken);
+            authCredentialRepository.save(api.getAuthApi().getAuthConfig().getAuthCredential());
+        }
+
+        if (api.getAuthConfig() != null && api.getAuthConfig().getAuthCredential() != null) {
+            api.getAuthConfig().getAuthCredential().setCredentialValue(newToken);
+            authCredentialRepository.save(api.getAuthConfig().getAuthCredential());
         }
     }
 
