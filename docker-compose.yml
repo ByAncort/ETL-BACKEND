@@ -191,6 +191,29 @@ services:
     networks:
       - swiggy-network
 
+  etl-config-llm-ms:
+    build:
+      context: ./ETL-CONFIG-LLM-MS
+      dockerfile: Dockerfile
+    container_name: swiggy-etl-config-llm
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/llm_config_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1290
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    ports:
+      - "8086:8086"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - eureka
+    networks:
+      - swiggy-network
+
   demo:
     build:
       context: ./demo
