@@ -3,6 +3,7 @@ package com.necronet.integrationms.service;
 import com.necronet.integrationms.dto.IntegrationRequest;
 import com.necronet.integrationms.dto.IntegrationResponse;
 import com.necronet.integrationms.entity.Integration;
+import com.necronet.integrationms.entity.IntegrationStatus;
 import com.necronet.integrationms.repository.IntegrationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,12 @@ public class IntegrationService {
     }
 
     public List<IntegrationResponse> getAllIntegrations() {
+        return integrationRepository.findByStatusNot(IntegrationStatus.DELETED).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<IntegrationResponse> getAllIntegrationsIncludingDeleted() {
         return integrationRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -68,12 +75,13 @@ public class IntegrationService {
     public void deleteIntegration(Long id) {
         Integration integration = integrationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Integration not found with id: " + id));
-        integrationRepository.delete(integration);
+        integration.setStatus(IntegrationStatus.DELETED);
+        integrationRepository.save(integration);
     }
 
     private void validateApiId(String apiId) {
         try {
-            String url = apiRegisterMsUrl + "/api/register/" + apiId;
+            String url = apiRegisterMsUrl + "/api-registry/" + apiId;
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("Invalid API ID: " + apiId);
@@ -84,12 +92,21 @@ public class IntegrationService {
         }
     }
 
+    public IntegrationResponse updateIntegrationStatus(Long id, IntegrationStatus status) {
+        Integration integration = integrationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Integration not found with id: " + id));
+        integration.setStatus(status);
+        Integration updated = integrationRepository.save(integration);
+        return mapToResponse(updated);
+    }
+
     private IntegrationResponse mapToResponse(Integration integration) {
         IntegrationResponse response = new IntegrationResponse();
         response.setId(integration.getId());
         response.setApiA(integration.getApiA());
         response.setApiB(integration.getApiB());
         response.setDescription(integration.getDescription());
+        response.setStatus(integration.getStatus());
         response.setCreatedAt(integration.getCreatedAt());
         response.setUpdatedAt(integration.getUpdatedAt());
         return response;

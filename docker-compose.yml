@@ -191,6 +191,18 @@ services:
     networks:
       - swiggy-network
 
+  demo:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile
+    container_name: swiggy-demo
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    ports:
+      - "8090:8080"
+    networks:
+      - swiggy-network
+
 networks:
   swiggy-network:
     driver: bridge

@@ -2,6 +2,7 @@ package com.necronet.schemamatchingms.controller;
 
 import com.necronet.schemamatchingms.dto.MatchFeedbackRequestDTO;
 import com.necronet.schemamatchingms.dto.MatchFeedbackResponseDTO;
+import com.necronet.schemamatchingms.dto.SchemaMatchBatchRequestDTO;
 import com.necronet.schemamatchingms.dto.SchemaMatchRequestDTO;
 import com.necronet.schemamatchingms.dto.SchemaMatchResponseDTO;
 import com.necronet.schemamatchingms.entity.MatchFeedback;
@@ -57,6 +58,15 @@ public class SchemaMatchController {
     public ResponseEntity<SchemaMatchResponseDTO> getMatchById(@PathVariable Long id) {
         SchemaMatch match = schemaMatchService.getMatchById(id);
         return ResponseEntity.ok(SchemaMatchResponseDTO.fromEntity(match));
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<List<SchemaMatchResponseDTO>> createMatches(
+            @Valid @RequestBody SchemaMatchBatchRequestDTO batchRequest) {
+        List<SchemaMatchResponseDTO> matches = schemaMatchService.createMatches(batchRequest.getMatches()).stream()
+                .map(SchemaMatchResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(matches);
     }
 
     @PostMapping

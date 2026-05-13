@@ -2,6 +2,7 @@ package com.necronet.integrationms.controller;
 
 import com.necronet.integrationms.dto.IntegrationRequest;
 import com.necronet.integrationms.dto.IntegrationResponse;
+import com.necronet.integrationms.entity.IntegrationStatus;
 import com.necronet.integrationms.service.IntegrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,15 +30,29 @@ public class IntegrationController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/connections/all")
+    public ResponseEntity<List<IntegrationResponse>> getAllIntegrationsIncludingDeleted() {
+        List<IntegrationResponse> responses = integrationService.getAllIntegrationsIncludingDeleted();
+        return ResponseEntity.ok(responses);
+    }
+
     @GetMapping("/connections/{id}")
     public ResponseEntity<IntegrationResponse> getIntegrationById(@PathVariable Long id) {
         IntegrationResponse response = integrationService.getIntegrationById(id);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/connections/{id}")
+    @PostMapping("/connections/{id}")
     public ResponseEntity<IntegrationResponse> updateIntegration(@PathVariable Long id, @RequestBody IntegrationRequest request) {
         IntegrationResponse response = integrationService.updateIntegration(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/connections/{id}/status")
+    public ResponseEntity<IntegrationResponse> updateIntegrationStatus(
+            @PathVariable Long id,
+            @RequestBody IntegrationStatus status) {
+        IntegrationResponse response = integrationService.updateIntegrationStatus(id, status);
         return ResponseEntity.ok(response);
     }
 

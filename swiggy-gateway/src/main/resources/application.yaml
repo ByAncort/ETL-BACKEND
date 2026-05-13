@@ -36,6 +36,7 @@ spring:
           uri: lb://SCHEMA-MATCHING-MS
           predicates:
             - Path=/api/integrations/connections/*
+            - Method=GET
           filters:
             - AuthenticationFilter
 

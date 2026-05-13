@@ -8,6 +8,7 @@ import com.necronet.apiregisterms.dto.TestResponse;
 import com.necronet.apiregisterms.entity.*;
 import com.necronet.apiregisterms.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApiService {
@@ -235,6 +237,25 @@ public class ApiService {
         Map<String, String> authHeaders = resolveAuthHeaders(api.getAuthConfig());
         if (authHeaders.isEmpty() && api.getAuthApi() != null) {
             authHeaders = resolveAuthHeaders(api.getAuthApi().getAuthConfig());
+        }
+
+        log.info("=== Test API Request ===");
+        log.info("Full URL: {}", fullUrl);
+        log.info("Method: {}", httpMethod);
+        if (authHeaders != null && !authHeaders.isEmpty()) {
+            authHeaders.forEach((key, value) -> {
+                if (key.equalsIgnoreCase("authorization")) {
+                    String masked = value.length() > 20
+                            ? value.substring(0, 20) + "..."
+                            : "***";
+                    log.info("Header '{}': {}", key, masked);
+                } else {
+                    log.info("Header '{}': {}", key, value);
+                }
+            });
+        }
+        if (body != null && !body.isBlank()) {
+            log.info("Body: {}", body);
         }
 
         long startTime = System.currentTimeMillis();

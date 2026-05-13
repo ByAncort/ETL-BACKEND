@@ -26,6 +26,10 @@ public class Integration {
     @Column(name = "description")
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private IntegrationStatus status = IntegrationStatus.ACTIVE;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

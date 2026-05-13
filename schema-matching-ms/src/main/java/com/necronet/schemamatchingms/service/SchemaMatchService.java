@@ -44,6 +44,13 @@ public class SchemaMatchService {
     }
 
     @Transactional
+    public List<SchemaMatch> createMatches(List<SchemaMatchRequestDTO> requests) {
+        return requests.stream()
+                .map(this::createMatch)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
     public SchemaMatch createMatch(SchemaMatchRequestDTO request) {
         SchemaMatch match = new SchemaMatch(
                 request.getIntegrationId(),
