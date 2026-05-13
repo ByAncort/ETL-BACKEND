@@ -310,6 +310,44 @@
 
 ---
 
+## ETL Config LLM MS
+
+**Base URL:** `/api/llm-configs`
+
+### Endpoints
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/llm-configs` | Registrar un nuevo LLM |
+| GET | `/api/llm-configs` | Listar todos los LLMs configurados |
+| GET | `/api/llm-configs/{id}` | Obtener LLM por ID |
+| GET | `/api/llm-configs/default` | Obtener el LLM configurado por defecto |
+| PUT | `/api/llm-configs/{id}` | Actualizar configuración de LLM |
+| DELETE | `/api/llm-configs/{id}` | Eliminar configuración de LLM |
+| PATCH | `/api/llm-configs/{id}/default` | Establecer LLM como default |
+
+### DTOs
+
+#### Request DTOs
+
+**LlmConfigRequest**
+```json
+{
+  "name": "GPT-4 Production",
+  "provider": "openai",
+  "apiKey": "sk-proj-xxxxx",
+  "baseUrl": "https://api.openai.com/v1",
+  "modelName": "gpt-4",
+  "isDefault": true
+}
+```
+
+#### Response DTOs
+
+- `LlmConfigResponse` - Respuesta con los datos del LLM configurado
+
+---
+
 ## Notas
 
 - Todos los endpoints soportan CORS cuando está habilitado (ver anotaciones `@CrossOrigin`)
