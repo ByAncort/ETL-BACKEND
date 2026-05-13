@@ -1,11 +1,66 @@
-# Test your FastAPI endpoints
-
-GET http://127.0.0.1:8000/
+### Get connection by ID
+GET http://localhost:8000/connection/1
 Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+### Get API definition by ID
+GET http://localhost:8000/api-definition/5
 Accept: application/json
 
 ###
+
+### Get API test data by integration ID
+GET http://localhost:8000/api-datos/integracion/5
+
+###
+
+### Get default model from ETL-CONFIG-LLM-MS
+GET http://localhost:8000/default-model
+
+###
+
+### Register a single schema match
+POST http://localhost:8000/schema-matches
+Content-Type: application/json
+
+{
+  "sourceField": "first_name",
+  "targetField": "givenName",
+  "confidence": 0.95,
+  "integrationId": 1,
+  "status": "PENDING"
+}
+
+###
+
+### Register multiple schema matches at once
+POST http://localhost:8000/schema-matches/batch
+Content-Type: application/json
+
+{
+  "matches": [
+    {
+      "sourceField": "first_name",
+      "targetField": "givenName",
+      "confidence": 0.95,
+      "integrationId": 1
+    },
+    {
+      "sourceField": "last_name",
+      "targetField": "familyName",
+      "confidence": 0.92,
+      "integrationId": 1
+    }
+  ]
+}
+
+###
+
+### Full integration processing (connection + APIs + data + model)
+GET http://localhost:8000/process-integration/1
+
+###
+
+### Run matching: extract fields from both APIs, call LLM, register matches
+POST http://localhost:8000/run-matching/1

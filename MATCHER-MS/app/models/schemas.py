@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+from decimal import Decimal
 
 
 class ConnectionResponse(BaseModel):
@@ -28,3 +29,39 @@ class ApiRegistryResponse(BaseModel):
     authApiId: Optional[int] = None
     authApiUrl: Optional[str] = None
     authValue: Optional[str] = None
+
+
+class LlmConfigResponse(BaseModel):
+    id: int
+    name: str
+    provider: str
+    apiKey: str
+    baseUrl: str
+    modelName: Optional[str] = None
+    isDefault: bool
+    status: str
+    createdAt: datetime
+    updatedAt: datetime
+
+
+class SchemaMatchRequest(BaseModel):
+    sourceField: str
+    targetField: str
+    confidence: Decimal
+    integrationId: Optional[int] = None
+    status: Optional[str] = None
+    transformation: Optional[str] = None
+    reviewedBy: Optional[int] = None
+
+
+class SchemaMatchResponse(BaseModel):
+    id: int
+    integrationId: Optional[int] = None
+    sourceField: str
+    targetField: str
+    confidence: Decimal
+    status: str
+    transformation: Optional[str] = None
+    reviewedBy: Optional[int] = None
+    reviewedAt: Optional[datetime] = None
+    createdAt: datetime

@@ -1,3 +1,10 @@
-from .schemas import ConnectionResponse, ApiRegistryResponse
+from .schemas import ConnectionResponse, ApiRegistryResponse, \
+    LlmConfigResponse, SchemaMatchRequest, SchemaMatchResponse
 
-__all__ = ["ConnectionResponse", "ApiRegistryResponse"]
+__all__ = [
+    "ConnectionResponse",
+    "ApiRegistryResponse",
+    "LlmConfigResponse",
+    "SchemaMatchRequest",
+    "SchemaMatchResponse",
+]

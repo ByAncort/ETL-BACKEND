@@ -77,6 +77,13 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: etl-config-llm-ms
+          uri: lb://ETL-CONFIG-LLM-MS
+          predicates:
+            - Path=/api/llm-configs/**
+          filters:
+            - AuthenticationFilter
+
 eureka:
   client:
     service-url:
