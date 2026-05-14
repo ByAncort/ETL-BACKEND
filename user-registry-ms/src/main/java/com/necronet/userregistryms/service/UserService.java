@@ -110,6 +110,11 @@ UserRole userRole = new UserRole();
 
         if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
             user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
+            try {
+                identityServiceClient.updatePassword(user.getUsername(), userRequest.getPassword());
+            } catch (Exception e) {
+                log.error("Error al actualizar la contraseña en identity-service para el usuario: {}", user.getUsername(), e);
+            }
         }
 
         User updatedUser = userRepository.save(user);

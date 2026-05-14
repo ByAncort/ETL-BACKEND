@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -105,6 +108,32 @@ public class IdentityServiceClient {
         } catch (Exception e) {
             log.error("Error enabling user in identity-service: {}", e.getMessage());
             throw new RuntimeException("Failed to enable user in identity service", e);
+        }
+    }
+
+    public void updatePassword(String username, String newPassword) {
+        try {
+            String url = IDENTITY_SERVICE_URL + "/update-password";
+
+            Map<String, String> request = new HashMap<>();
+            request.put("username", username);
+            request.put("newPassword", newPassword);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(request, headers);
+
+            restTemplate.exchange(
+                    url,
+                    HttpMethod.PUT,
+                    entity,
+                    String.class
+            );
+
+            log.info("User {} password updated successfully in identity-service", username);
+        } catch (Exception e) {
+            log.error("Error updating password in identity-service: {}", e.getMessage());
+            throw new RuntimeException("Failed to update password in identity service", e);
         }
     }
 }

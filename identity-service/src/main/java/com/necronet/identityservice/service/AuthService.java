@@ -73,4 +73,12 @@ public class AuthService {
         credential.setEnabled(true);
         repository.save(credential);
     }
+
+    @Transactional
+    public void updatePassword(String username, String newPassword) {
+        UserCredential credential = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        credential.setPassword(passwordEncoder.encode(newPassword));
+        repository.save(credential);
+    }
 }

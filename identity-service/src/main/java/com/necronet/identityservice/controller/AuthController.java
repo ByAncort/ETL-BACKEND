@@ -3,6 +3,7 @@ package com.necronet.identityservice.controller;
 import com.necronet.identityservice.dto.AuthRequest;
 import com.necronet.identityservice.dto.AuthResponse;
 import com.necronet.identityservice.dto.RegisterRequest;
+import com.necronet.identityservice.dto.UpdatePasswordRequest;
 import com.necronet.identityservice.entity.UserCredential;
 import com.necronet.identityservice.service.AuthService;
 import com.necronet.identityservice.service.JwtService;
@@ -99,5 +100,11 @@ public class AuthController {
     public ResponseEntity<AuthResponse> enableUser(@PathVariable String username) {
         authService.enableUser(username);
         return ResponseEntity.ok(new AuthResponse("User enabled successfully", null));
+    }
+
+    @PutMapping("/update-password")
+    public ResponseEntity<AuthResponse> updatePassword(@RequestBody UpdatePasswordRequest request) {
+        authService.updatePassword(request.getUsername(), request.getNewPassword());
+        return ResponseEntity.ok(new AuthResponse("Password updated successfully", null));
     }
 }
