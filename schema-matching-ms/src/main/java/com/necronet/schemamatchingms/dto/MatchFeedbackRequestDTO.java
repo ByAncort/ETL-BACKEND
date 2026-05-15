@@ -12,6 +12,9 @@ public class MatchFeedbackRequestDTO {
 
     private String actualTarget;
 
+    @NotNull(message = "Reviewed by is required")
+    private Long reviewedBy;
+
     public Long getMatchId() { return matchId; }
     public void setMatchId(Long matchId) { this.matchId = matchId; }
 
@@ -20,4 +23,7 @@ public class MatchFeedbackRequestDTO {
 
     public String getActualTarget() { return actualTarget; }
     public void setActualTarget(String actualTarget) { this.actualTarget = actualTarget; }
+
+    public Long getReviewedBy() { return reviewedBy; }
+    public void setReviewedBy(Long reviewedBy) { this.reviewedBy = reviewedBy; }
 }

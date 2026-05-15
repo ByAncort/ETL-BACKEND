@@ -84,6 +84,13 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: ms-save-data
+          uri: http://ms-save-data:8001
+          predicates:
+            - Path=/api/etl/**
+          filters:
+            - AuthenticationFilter
+
 eureka:
   client:
     service-url:

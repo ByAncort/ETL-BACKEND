@@ -231,6 +231,24 @@ services:
     networks:
       - swiggy-network
 
+  ms-save-data:
+    build:
+      context: ./MS-SAVE-DATA
+      dockerfile: Dockerfile
+    container_name: swiggy-save-data
+    environment:
+      - INTEGRATION_MS_URL=http://integration-ms:8082
+      - API_REGISTRY_MS_URL=http://api-register-ms:8083
+      - SCHEMA_MATCHING_MS_URL=http://schema-matching-ms:8085
+    ports:
+      - "8001:8001"
+    depends_on:
+      - integration-ms
+      - api-register-ms
+      - schema-matching-ms
+    networks:
+      - swiggy-network
+
   demo:
     build:
       context: ./demo

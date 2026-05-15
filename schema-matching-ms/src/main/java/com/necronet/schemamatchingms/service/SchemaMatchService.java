@@ -107,12 +107,28 @@ public class SchemaMatchService {
 
     @Transactional
     public MatchFeedback addFeedback(MatchFeedbackRequestDTO request) {
+        SchemaMatch match = getMatchById(request.getMatchId());
+
+        if (match.getStatus() != MatchStatus.PENDING) {
+            throw new RuntimeException("SchemaMatch " + request.getMatchId() + " has already been reviewed");
+        }
+
         MatchFeedback feedback = new MatchFeedback(
                 request.getMatchId(),
                 request.getUserApproved(),
                 request.getActualTarget()
         );
-        return matchFeedbackRepository.save(feedback);
+        feedback = matchFeedbackRepository.save(feedback);
+
+        match.setStatus(request.getUserApproved() ? MatchStatus.ACCEPTED : MatchStatus.REJECTED);
+        if (request.getActualTarget() != null && !request.getActualTarget().isBlank()) {
+            match.setTargetField(request.getActualTarget());
+        }
+        match.setReviewedBy(request.getReviewedBy());
+        match.setReviewedAt(LocalDateTime.now());
+        schemaMatchRepository.save(match);
+
+        return feedback;
     }
 
     public List<MatchFeedback> getFeedbackByMatch(Long matchId) {

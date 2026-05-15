@@ -235,8 +235,11 @@ public class ApiService {
             String methodName) {
 
         Map<String, String> authHeaders = resolveAuthHeaders(api.getAuthConfig());
-        if (authHeaders.isEmpty() && api.getAuthApi() != null) {
-            authHeaders = resolveAuthHeaders(api.getAuthApi().getAuthConfig());
+        if (authHeaders.isEmpty() && api.getAuthApi() != null && api.getAuthApi().getAuthConfig() != null) {
+            AuthType authApiType = api.getAuthApi().getAuthConfig().getAuthType();
+            if (authApiType == AuthType.BEARER || authApiType == AuthType.OAUTH2) {
+                authHeaders = resolveAuthHeaders(api.getAuthApi().getAuthConfig());
+            }
         }
 
         log.info("=== Test API Request ===");
@@ -397,15 +400,16 @@ public class ApiService {
     }
 
     private void updateApiCredentials(Apis api, String newToken) {
-        if (api.getAuthApi() != null && api.getAuthApi().getAuthConfig() != null
-                && api.getAuthApi().getAuthConfig().getAuthCredential() != null) {
-            api.getAuthApi().getAuthConfig().getAuthCredential().setCredentialValue(newToken);
-            authCredentialRepository.save(api.getAuthApi().getAuthConfig().getAuthCredential());
-        }
-
         if (api.getAuthConfig() != null && api.getAuthConfig().getAuthCredential() != null) {
             api.getAuthConfig().getAuthCredential().setCredentialValue(newToken);
             authCredentialRepository.save(api.getAuthConfig().getAuthCredential());
+        } else if (api.getAuthApi() != null && api.getAuthApi().getAuthConfig() != null
+                && api.getAuthApi().getAuthConfig().getAuthCredential() != null) {
+            AuthType authApiType = api.getAuthApi().getAuthConfig().getAuthType();
+            if (authApiType == AuthType.BEARER || authApiType == AuthType.OAUTH2) {
+                api.getAuthApi().getAuthConfig().getAuthCredential().setCredentialValue(newToken);
+                authCredentialRepository.save(api.getAuthApi().getAuthConfig().getAuthCredential());
+            }
         }
     }
 
