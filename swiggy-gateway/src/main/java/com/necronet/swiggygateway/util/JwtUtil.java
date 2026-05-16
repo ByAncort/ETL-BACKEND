@@ -104,9 +104,16 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.get("roles", String.class);
+            Object roles = claims.get("roles");
+            if (roles instanceof java.util.List) {
+                return String.join(",", (java.util.List<String>) roles);
+            }
+            if (roles instanceof String) {
+                return (String) roles;
+            }
+            return "USER";
         } catch (Exception e) {
-            log.warn("No roles found in token");
+            log.warn("No roles found in token: {}", e.getMessage());
             return "USER";
         }
     }

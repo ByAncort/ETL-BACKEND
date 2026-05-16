@@ -102,6 +102,12 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse("User enabled successfully", null));
     }
 
+    @GetMapping("/disable/{username}")
+    public ResponseEntity<AuthResponse> disableUser(@PathVariable String username) {
+        authService.disableUser(username);
+        return ResponseEntity.ok(new AuthResponse("User disabled successfully", null));
+    }
+
     @PutMapping("/update-password")
     public ResponseEntity<AuthResponse> updatePassword(@RequestBody UpdatePasswordRequest request) {
         authService.updatePassword(request.getUsername(), request.getNewPassword());

@@ -75,6 +75,14 @@ public class AuthService {
     }
 
     @Transactional
+    public void disableUser(String username) {
+        UserCredential credential = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        credential.setEnabled(false);
+        repository.save(credential);
+    }
+
+    @Transactional
     public void updatePassword(String username, String newPassword) {
         UserCredential credential = repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
