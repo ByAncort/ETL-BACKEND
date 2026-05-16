@@ -155,6 +155,34 @@ UserRole userRole = new UserRole();
     }
 
     @Transactional
+    public void activateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setStatus(UserStatus.active);
+        userRepository.save(user);
+        try {
+            identityServiceClient.enableUser(user.getUsername());
+        } catch (Exception e) {
+            log.error("Error al habilitar login de Usuario: {} error: {}", user.getUsername(), e.getMessage());
+        }
+        log.info("User activated for: {}", user.getUsername());
+    }
+
+    @Transactional
+    public void deactivateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setStatus(UserStatus.inactive);
+        userRepository.save(user);
+        try {
+            identityServiceClient.disableUser(user.getUsername());
+        } catch (Exception e) {
+            log.error("Error al deshabilitar login de Usuario: {} error: {}", user.getUsername(), e.getMessage());
+        }
+        log.info("User deactivated for: {}", user.getUsername());
+    }
+
+    @Transactional
     public void updateLastLogin(Long id, String ipAddress) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));

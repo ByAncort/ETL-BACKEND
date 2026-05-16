@@ -98,16 +98,24 @@ public class IdentityServiceClient {
     public void enableUser(String username) {
         try {
             String url = IDENTITY_SERVICE_URL + "/enable/" + username;
-
-            // Para GET no necesitas body ni headers especiales
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-
             log.info("User enabled in identity-service. Response status: {}", response.getStatusCode());
             log.info("User {} enabled successfully", username);
-
         } catch (Exception e) {
             log.error("Error enabling user in identity-service: {}", e.getMessage());
             throw new RuntimeException("Failed to enable user in identity service", e);
+        }
+    }
+
+    public void disableUser(String username) {
+        try {
+            String url = IDENTITY_SERVICE_URL + "/disable/" + username;
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            log.info("User disabled in identity-service. Response status: {}", response.getStatusCode());
+            log.info("User {} disabled successfully", username);
+        } catch (Exception e) {
+            log.error("Error disabling user in identity-service: {}", e.getMessage());
+            throw new RuntimeException("Failed to disable user in identity service", e);
         }
     }
 
