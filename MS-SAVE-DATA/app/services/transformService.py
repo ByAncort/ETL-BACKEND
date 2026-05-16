@@ -1,4 +1,7 @@
+import logging
 from app.models.schemas import SchemaMatchResponse
+
+logger = logging.getLogger(__name__)
 
 
 class TransformService:
@@ -21,7 +24,34 @@ class TransformService:
         return transformed
 
     def transform_data(self, records: list[dict], matches: list[SchemaMatchResponse]) -> list[dict]:
-        return [self.transform_record(r, matches) for r in records]
+        logger.info(
+            f"[TRANSFORM] Aplicando %d schema matches sobre %d registros",
+            len(matches), len(records),
+        )
+
+        for m in matches:
+            logger.info(
+                f"[TRANSFORM] Mapeo: '%s' → '%s' (transf=%s, confianza=%.4f)",
+                m.sourceField,
+                m.targetField,
+                m.transformation or "ninguna",
+                m.confidence,
+            )
+
+        result = [self.transform_record(r, matches) for r in records]
+
+        if result:
+            logger.info(
+                f"[TRANSFORM] Registro transformado ejemplo: %s",
+                {k: str(v)[:50] for k, v in result[0].items()},
+            )
+
+        logger.info(
+            f"[TRANSFORM] Transformados %d/%d registros exitosamente",
+            len(result), len(records),
+        )
+
+        return result
 
     def _apply_transformation(self, value, transformation: str):
         transformation = transformation.strip()
@@ -30,6 +60,9 @@ class TransformService:
             try:
                 return int(float(value))
             except (ValueError, TypeError):
+                logger.warning(
+                    f"[TRANSFORM] Fallo int() para valor '%s', se deja original", value,
+                )
                 return value
 
         if transformation.startswith("float(") and transformation.endswith(")"):
@@ -52,4 +85,8 @@ class TransformService:
         if transformation.startswith("lower(") and transformation.endswith(")"):
             return str(value).lower() if value else value
 
+        logger.warning(
+            f"[TRANSFORM] Transformación desconocida '%s', se deja valor original",
+            transformation,
+        )
         return value

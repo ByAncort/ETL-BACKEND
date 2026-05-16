@@ -203,7 +203,11 @@ public class ApiService {
         String pathParams = request != null && request.getPathParams() != null ? request.getPathParams() : "";
         String queryParams = request != null && request.getQueryParams() != null ? request.getQueryParams() : "";
         String body = request != null && request.getBody() != null ? request.getBody() : null;
+        String headers = api.getAuthApi().getAuthConfig().getHeader() != null ? api.getAuthApi().getAuthConfig().getHeader().getValue() : null;
+        String headerType = api.getAuthApi().getAuthConfig().getAuthType() != null ? api.getAuthApi().getAuthConfig().getAuthType().name() : null;;
+        String headerValue = api.getAuthApi().getAuthConfig().getAuthCredential().getCredentialValue();
 
+        String fullHeader = headers +" "+headerType+" "+headerValue;
         if (api instanceof ApiEndpoint endpoint) {
             if (pathParams.isEmpty() && endpoint.getPathParams() != null) pathParams = endpoint.getPathParams();
             if (queryParams.isEmpty() && endpoint.getQueryParams() != null) queryParams = endpoint.getQueryParams();

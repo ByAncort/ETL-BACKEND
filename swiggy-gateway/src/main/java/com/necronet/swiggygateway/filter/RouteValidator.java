@@ -30,7 +30,8 @@ public class RouteValidator {
             "/webjars",
             "/favicon.ico",
             "/health",
-            "/info"
+            "/info",
+            "/api/workspace-projects"
     );
 
     public Predicate<ServerHttpRequest> isSecured = request -> {

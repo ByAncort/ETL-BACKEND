@@ -91,6 +91,11 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: demo
+          uri: http://demo:8080
+          predicates:
+            - Path=/api/workspace-projects/**
+
 eureka:
   client:
     service-url:
