@@ -1,3 +1,4 @@
+import os
 import json
 import pandas as pd
 import httpx
@@ -85,7 +86,8 @@ class DataService:
         }
 
     async def fetch_api_data(self, api_id: int) -> dict:
-        test_url = f"http://localhost:8083/api-registry/{api_id}/test"
+        registry_base = os.getenv("API_REGISTRY_MS_URL", "http://localhost:8083")
+        test_url = f"{registry_base}/api-registry/{api_id}/test"
         api_def = await api_registry_client.get_api_definition(api_id)
         payload = {
             "pathParams": api_def.pathParams or "",

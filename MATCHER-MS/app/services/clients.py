@@ -1,11 +1,12 @@
+import os
 import httpx
 from app.models import ConnectionResponse, ApiRegistryResponse, \
     LlmConfigResponse, SchemaMatchRequest, SchemaMatchResponse
 
 
 class IntegrationClient:
-    def __init__(self, base_url: str = "http://localhost:8082"):
-        self.base_url = base_url
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv("INTEGRATION_MS_URL", "http://localhost:8082")
 
     async def get_connection(self, connection_id: int) -> ConnectionResponse:
         url = f"{self.base_url}/api/integrations/connections/{connection_id}"
@@ -16,8 +17,8 @@ class IntegrationClient:
 
 
 class ApiRegistryClient:
-    def __init__(self, base_url: str = "http://localhost:8083"):
-        self.base_url = base_url
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv("API_REGISTRY_MS_URL", "http://localhost:8083")
 
     async def get_api_definition(self, api_id: int) -> ApiRegistryResponse:
         url = f"{self.base_url}/api-registry/{api_id}"
@@ -28,8 +29,8 @@ class ApiRegistryClient:
 
 
 class LlmConfigClient:
-    def __init__(self, base_url: str = "http://localhost:8086"):
-        self.base_url = base_url
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv("LLM_CONFIG_MS_URL", "http://localhost:8086")
 
     async def get_default_model(self) -> LlmConfigResponse:
         url = f"{self.base_url}/api/llm-configs/default"
@@ -40,8 +41,8 @@ class LlmConfigClient:
 
 
 class SchemaMatchClient:
-    def __init__(self, base_url: str = "http://localhost:8085"):
-        self.base_url = base_url
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv("SCHEMA_MATCHING_MS_URL", "http://localhost:8085")
 
     async def create_match(self, request: SchemaMatchRequest) -> SchemaMatchResponse:
         url = f"{self.base_url}/api/schema-matches"

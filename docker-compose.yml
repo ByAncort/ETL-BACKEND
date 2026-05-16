@@ -119,6 +119,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - JAVA_OPTS=-Xmx512m -Xms256m
       - API_REGISTER_MS_URL=http://api-register-ms:8083
+      - SCHEMA_MATCHING_MS_URL=http://matcher-ms:8000
       - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/registry_api?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=1290
@@ -191,12 +192,13 @@ services:
     networks:
       - swiggy-network
 
-  etl-config-llm-ms:
+  etl-config-llm:
     build:
       context: ./ETL-CONFIG-LLM-MS
       dockerfile: Dockerfile
     container_name: swiggy-etl-config-llm
     environment:
+      - SERVER_PORT=8086
       - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/llm_config_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=1290
@@ -204,13 +206,28 @@ services:
       - JAVA_OPTS=-Xmx512m -Xms256m
     ports:
       - "8086:8086"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     depends_on:
       - eureka
+    networks:
+      - swiggy-network
+
+  matcher-ms:
+    build:
+      context: ./MATCHER-MS
+      dockerfile: Dockerfile
+    container_name: swiggy-matcher
+    environment:
+      - INTEGRATION_MS_URL=http://integration-ms:8082
+      - API_REGISTRY_MS_URL=http://api-register-ms:8083
+      - SCHEMA_MATCHING_MS_URL=http://schema-matching-ms:8085
+      - LLM_CONFIG_MS_URL=http://etl-config-llm:8086
+    ports:
+      - "8000:8000"
+    depends_on:
+      - integration-ms
+      - api-register-ms
+      - schema-matching-ms
+      - etl-config-llm
     networks:
       - swiggy-network
 

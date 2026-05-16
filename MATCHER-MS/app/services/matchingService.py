@@ -1,5 +1,4 @@
 import json
-from decimal import Decimal
 from fastapi import HTTPException
 from starlette import status
 
@@ -83,7 +82,7 @@ class MatchingService:
             requests.append(SchemaMatchRequest(
                 sourceField=m["sourceField"],
                 targetField=m["targetField"],
-                confidence=Decimal(str(m.get("confidence", 0.5))),
+                confidence=float(m.get("confidence", 0.5)),
                 integrationId=integration_id,
                 transformation=m.get("transformation"),
             ))

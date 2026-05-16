@@ -25,6 +25,8 @@ public class IntegrationService {
 
     @Value("${api.register.ms.url}")
     private String apiRegisterMsUrl;
+    @Value("${api.matcher-ms.url}")
+    private String apiMatcherIA;
 
     public IntegrationResponse createIntegration(IntegrationRequest request) {
         validateApiId(request.getApiA());
@@ -36,6 +38,9 @@ public class IntegrationService {
         integration.setDescription(request.getDescription());
 
         Integration savedIntegration = integrationRepository.save(integration);
+
+        schemaMatchinIA(savedIntegration.getId().toString());
+
         return mapToResponse(savedIntegration);
     }
 
@@ -78,7 +83,20 @@ public class IntegrationService {
         integration.setStatus(IntegrationStatus.DELETED);
         integrationRepository.save(integration);
     }
+    private void schemaMatchinIA(String integrationId){
+        try{
+            String url =apiMatcherIA+ "/run-matching/" + integrationId;
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
 
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Invalid integration ID: " + integrationId);
+            }
+        }catch(Exception e){
+            log.error("Error matcher by Ia ID: {}", integrationId, e);
+            throw new RuntimeException("Invalid INTEGRATION ID: " + integrationId);
+        }
+
+    }
     private void validateApiId(String apiId) {
         try {
             String url = apiRegisterMsUrl + "/api-registry/" + apiId;

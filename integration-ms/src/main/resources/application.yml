@@ -21,6 +21,8 @@ api:
   register:
     ms:
       url: ${API_REGISTER_MS_URL:http://api-register-ms:8083}
+  matcher-ms:
+    url: ${SCHEMA_MATCHING_MS_URL:http://host.docker.internal:8000}
 
 eureka:
   client:

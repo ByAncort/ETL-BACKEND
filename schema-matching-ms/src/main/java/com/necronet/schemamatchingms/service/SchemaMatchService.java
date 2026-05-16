@@ -52,6 +52,11 @@ public class SchemaMatchService {
 
     @Transactional
     public SchemaMatch createMatch(SchemaMatchRequestDTO request) {
+        if (schemaMatchRepository.existsSchemaMatch(request.getIntegrationId(), request.getSourceField())) {
+            throw new RuntimeException("A match for integrationId " + request.getIntegrationId() +
+                    " and sourceField '" + request.getSourceField() + "' already exists");
+        }
+
         SchemaMatch match = new SchemaMatch(
                 request.getIntegrationId(),
                 request.getSourceField(),

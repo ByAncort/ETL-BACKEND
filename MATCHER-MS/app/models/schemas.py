@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
-from decimal import Decimal
 
 
 class ConnectionResponse(BaseModel):
@@ -47,7 +46,7 @@ class LlmConfigResponse(BaseModel):
 class SchemaMatchRequest(BaseModel):
     sourceField: str
     targetField: str
-    confidence: Decimal
+    confidence: float
     integrationId: Optional[int] = None
     status: Optional[str] = None
     transformation: Optional[str] = None
@@ -59,7 +58,7 @@ class SchemaMatchResponse(BaseModel):
     integrationId: Optional[int] = None
     sourceField: str
     targetField: str
-    confidence: Decimal
+    confidence: float
     status: str
     transformation: Optional[str] = None
     reviewedBy: Optional[int] = None
