@@ -17,9 +17,16 @@ public class UserRequest {
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
 
+    @NotBlank(message = "First name is required")
+    @Size(max = 50, message = "First name cannot exceed 50 characters")
+    @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z]+(?:\\s[a-zA-Z]+)*$", message = "First name can only contain letters and spaces, without spaces at the beginning or end")
     private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    @Size(max = 50, message = "Last name cannot exceed 50 characters")
+    @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z]+(?:\\s[a-zA-Z]+)*$", message = "Last name can only contain letters and spaces, without spaces at the beginning or end")
     private String lastName;
 }
