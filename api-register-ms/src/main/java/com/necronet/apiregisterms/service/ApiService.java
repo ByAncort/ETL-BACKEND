@@ -287,7 +287,11 @@ public class ApiService {
                     .timeout(Duration.ofSeconds(30))
                     .block();
 
-            return response;
+            return response != null ? response : TestResponse.builder()
+                    .statusCode(500)
+                    .error("No response received")
+                    .timestamp(LocalDateTime.now())
+                    .build();
         } catch (Exception e) {
             long responseTime = System.currentTimeMillis() - startTime;
             String errorMessage = e.getMessage();
