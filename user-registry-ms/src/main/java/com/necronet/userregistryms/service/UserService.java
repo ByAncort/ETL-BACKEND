@@ -99,12 +99,23 @@ UserRole userRole = new UserRole();
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        if (!user.getEmail().equals(userRequest.getEmail()) &&
-                userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        boolean emailChanged = !user.getEmail().equals(userRequest.getEmail());
+
+        if (emailChanged) {
+            if (userRepository.existsByEmail(userRequest.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(userRequest.getEmail());
+            user.setStatus(UserStatus.pending_verification);
+            user.setEmailVerifiedAt(null);
+            try {
+                identityServiceClient.updateEmail(user.getUsername(), userRequest.getEmail());
+                identityServiceClient.disableUser(user.getUsername());
+            } catch (Exception e) {
+                log.error("Error updating email/status in identity-service for user: {}", user.getUsername(), e);
+            }
         }
 
-        user.setEmail(userRequest.getEmail());
         user.setFirstName(userRequest.getFirstName());
         user.setLastName(userRequest.getLastName());
 

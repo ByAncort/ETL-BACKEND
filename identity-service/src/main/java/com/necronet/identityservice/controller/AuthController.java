@@ -4,6 +4,7 @@ import com.necronet.identityservice.dto.AuthRequest;
 import com.necronet.identityservice.dto.AuthResponse;
 import com.necronet.identityservice.dto.RegisterRequest;
 import com.necronet.identityservice.dto.UpdatePasswordRequest;
+import com.necronet.identityservice.dto.UpdateEmailRequest;
 import com.necronet.identityservice.entity.UserCredential;
 import com.necronet.identityservice.service.AuthService;
 import com.necronet.identityservice.service.JwtService;
@@ -64,6 +65,12 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new AuthResponse("Invalid username/email or password", null, null));
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse("User account is pending verification or deactivated", null, null));
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse(e.getMessage(), null, null));
         }
     }
 
@@ -112,5 +119,11 @@ public class AuthController {
     public ResponseEntity<AuthResponse> updatePassword(@RequestBody UpdatePasswordRequest request) {
         authService.updatePassword(request.getUsername(), request.getNewPassword());
         return ResponseEntity.ok(new AuthResponse("Password updated successfully", null));
+    }
+
+    @PutMapping("/update-email")
+    public ResponseEntity<AuthResponse> updateEmail(@RequestBody UpdateEmailRequest request) {
+        authService.updateEmail(request.getUsername(), request.getNewEmail());
+        return ResponseEntity.ok(new AuthResponse("Email updated successfully", null));
     }
 }

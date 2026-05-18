@@ -89,4 +89,12 @@ public class AuthService {
         credential.setPassword(passwordEncoder.encode(newPassword));
         repository.save(credential);
     }
+
+    @Transactional
+    public void updateEmail(String username, String newEmail) {
+        UserCredential credential = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        credential.setEmail(newEmail);
+        repository.save(credential);
+    }
 }

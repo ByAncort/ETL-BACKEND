@@ -144,4 +144,30 @@ public class IdentityServiceClient {
             throw new RuntimeException("Failed to update password in identity service", e);
         }
     }
+
+    public void updateEmail(String username, String newEmail) {
+        try {
+            String url = IDENTITY_SERVICE_URL + "/update-email";
+
+            Map<String, String> request = new HashMap<>();
+            request.put("username", username);
+            request.put("newEmail", newEmail);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(request, headers);
+
+            restTemplate.exchange(
+                    url,
+                    HttpMethod.PUT,
+                    entity,
+                    String.class
+            );
+
+            log.info("User {} email updated successfully in identity-service", username);
+        } catch (Exception e) {
+            log.error("Error updating email in identity-service: {}", e.getMessage());
+            throw new RuntimeException("Failed to update email in identity service", e);
+        }
+    }
 }
