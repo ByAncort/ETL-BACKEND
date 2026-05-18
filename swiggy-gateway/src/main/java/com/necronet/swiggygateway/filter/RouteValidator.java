@@ -15,6 +15,8 @@ public class RouteValidator {
     // These endpoints are OPEN - no authentication required
     private static final List<String> OPEN_API_ENDPOINTS = List.of(
             "/api/users/register",
+            "/api/users/forgot-password",
+            "/api/users/reset-password",
             "/api/users/login",
             "/api/v1/auth/register",
             "/api/v1/auth/token",

@@ -43,6 +43,16 @@ class LlmConfigResponse(BaseModel):
     updatedAt: datetime
 
 
+class EtlResponse(BaseModel):
+    integrationId: int
+    sourceApiId: int
+    targetApiId: int
+    totalRecords: int
+    transformedRecords: int
+    loadedRecords: int
+    errors: list[str]
+
+
 class SchemaMatchRequest(BaseModel):
     sourceField: str
     targetField: str

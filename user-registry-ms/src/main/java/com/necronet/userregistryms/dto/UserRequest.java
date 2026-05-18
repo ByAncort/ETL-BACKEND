@@ -1,5 +1,6 @@
 package com.necronet.userregistryms.dto;
 
+import com.necronet.userregistryms.validation.OnCreate;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,7 @@ public class UserRequest {
     @Email(message = "Email must be valid")
     private String email;
 
+    @NotBlank(groups = OnCreate.class, message = "Password is required")
     private String password;
 
     @NotBlank(message = "First name is required")

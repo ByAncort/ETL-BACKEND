@@ -51,6 +51,19 @@ class ApiRegistryClient:
             return response.json()
 
 
+class LogClient:
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv("INTEGRATION_MS_URL", "http://localhost:8082")
+
+    async def send_log(self, log_data: dict):
+        url = f"{self.base_url}/api/logs"
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                await client.post(url, json=log_data)
+        except Exception:
+            pass
+
+
 class SchemaMatchClient:
     def __init__(self, base_url: str = None):
         self.base_url = base_url or os.getenv("SCHEMA_MATCHING_MS_URL", "http://localhost:8085")

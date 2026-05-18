@@ -84,6 +84,7 @@ class MatchingService:
                 targetField=m["targetField"],
                 confidence=float(m.get("confidence", 0.5)),
                 integrationId=integration_id,
+                status="ACCEPTED",
                 transformation=m.get("transformation"),
             ))
 

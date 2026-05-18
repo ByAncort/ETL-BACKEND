@@ -3,13 +3,16 @@ package com.necronet.userregistryms.service;
 import com.necronet.userregistryms.client.IdentityServiceClient;
 import com.necronet.userregistryms.dto.UserRequest;
 import com.necronet.userregistryms.dto.UserResponse;
+import com.necronet.userregistryms.entity.PasswordResetToken;
 import com.necronet.userregistryms.entity.User;
 import com.necronet.userregistryms.entity.UserRole;
 import com.necronet.userregistryms.entity.UserStatus;
+import com.necronet.userregistryms.repository.PasswordResetTokenRepository;
 import com.necronet.userregistryms.repository.UserRepository;
 import com.necronet.userregistryms.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +32,12 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final IdentityServiceClient identityServiceClient;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     @Transactional
     public UserResponse createUser(UserRequest userRequest) {
@@ -120,12 +129,8 @@ UserRole userRole = new UserRole();
         user.setLastName(userRequest.getLastName());
 
         if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
+            identityServiceClient.updatePassword(user.getUsername(), userRequest.getPassword());
             user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
-            try {
-                identityServiceClient.updatePassword(user.getUsername(), userRequest.getPassword());
-            } catch (Exception e) {
-                log.error("Error al actualizar la contraseña en identity-service para el usuario: {}", user.getUsername(), e);
-            }
         }
 
         User updatedUser = userRepository.save(user);
@@ -200,6 +205,48 @@ UserRole userRole = new UserRole();
         user.setLastLoginAt(LocalDateTime.now());
         user.setLastLoginIp(ipAddress);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        passwordResetTokenRepository.deleteByUserId(user.getId());
+
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken(token);
+        resetToken.setUserId(user.getId());
+        resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
+        passwordResetTokenRepository.save(resetToken);
+
+        String resetUrl = "http://localhost:5173/reset-password" + "?token=" + token;        emailService.sendPasswordResetEmail(user.getEmail(), resetUrl);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+
+        if (resetToken.isUsed()) {
+            throw new RuntimeException("Token has already been used");
+        }
+
+        if (resetToken.isExpired()) {
+            throw new RuntimeException("Token has expired");
+        }
+
+        User user = userRepository.findById(resetToken.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        identityServiceClient.updatePassword(user.getUsername(), newPassword);
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
     }
 
     private UserResponse mapToResponse(User user) {

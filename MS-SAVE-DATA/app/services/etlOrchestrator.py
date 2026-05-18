@@ -1,6 +1,7 @@
 import time
+import traceback
 import logging
-from app.services.clients import IntegrationClient, SchemaMatchClient
+from app.services.clients import IntegrationClient, SchemaMatchClient, LogClient
 from app.services.extractService import ExtractService
 from app.services.transformService import TransformService
 from app.services.loadService import LoadService
@@ -13,9 +14,23 @@ class EtlOrchestrator:
     def __init__(self):
         self.integration_client = IntegrationClient()
         self.schema_match_client = SchemaMatchClient()
+        self.log_client = LogClient()
         self.extract_service = ExtractService()
         self.transform_service = TransformService()
         self.load_service = LoadService()
+
+    async def _send_error_log(self, integration_id: int, phase: str, message: str, duration_ms: float = 0):
+        log_data = {
+            "serviceName": "ms-save-data",
+            "className": "EtlOrchestrator",
+            "methodName": "run_etl",
+            "logLevel": "ERROR",
+            "message": f"[ETL] Error en fase {phase}: {message}",
+            "detail": traceback.format_exc(),
+            "durationMs": int(duration_ms * 1000),
+            "integrationId": str(integration_id),
+        }
+        await self.log_client.send_log(log_data)
 
     async def run_etl(self, integration_id: int) -> EtlResponse:
         start = time.time()
@@ -31,6 +46,7 @@ class EtlOrchestrator:
             )
         except Exception as e:
             logger.error(f"[ETL] Error obteniendo conexión: %s", str(e))
+            await self._send_error_log(integration_id, "CONNECTION", str(e))
             return EtlResponse(
                 integrationId=integration_id,
                 sourceApiId=0,
@@ -61,6 +77,7 @@ class EtlOrchestrator:
             )
         except Exception as e:
             logger.error(f"[ETL] Error obteniendo matches: %s", str(e))
+            await self._send_error_log(integration_id, "MATCHES", str(e))
             return EtlResponse(
                 integrationId=integration_id,
                 sourceApiId=source_api_id,
@@ -98,6 +115,7 @@ class EtlOrchestrator:
             )
         except Exception as e:
             logger.error(f"[ETL] Error en EXTRACT: %s", str(e))
+            await self._send_error_log(integration_id, "EXTRACT", str(e))
             return EtlResponse(
                 integrationId=integration_id,
                 sourceApiId=source_api_id,
@@ -118,6 +136,7 @@ class EtlOrchestrator:
             )
         except Exception as e:
             logger.error(f"[ETL] Error en TRANSFORM: %s", str(e))
+            await self._send_error_log(integration_id, "TRANSFORM", str(e))
             return EtlResponse(
                 integrationId=integration_id,
                 sourceApiId=source_api_id,
@@ -139,6 +158,7 @@ class EtlOrchestrator:
             )
         except Exception as e:
             logger.error(f"[ETL] Error en LOAD: %s", str(e))
+            await self._send_error_log(integration_id, "LOAD", str(e))
             return EtlResponse(
                 integrationId=integration_id,
                 sourceApiId=source_api_id,

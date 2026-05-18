@@ -1,10 +1,16 @@
 package com.necronet.userregistryms.controller;
 
+import com.necronet.userregistryms.dto.ForgotPasswordRequest;
+import com.necronet.userregistryms.dto.ResetPasswordRequest;
 import com.necronet.userregistryms.dto.UserRequest;
 import com.necronet.userregistryms.dto.UserResponse;
 import com.necronet.userregistryms.service.UserService;
+import com.necronet.userregistryms.validation.OnCreate;
+import com.necronet.userregistryms.validation.OnUpdate;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +50,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<UserResponse> createUser(@Validated({Default.class, OnCreate.class}) @RequestBody UserRequest userRequest) {
         UserResponse response = userService.createUser(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -80,7 +86,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserRequest userRequest,
+            @Validated({Default.class, OnUpdate.class}) @RequestBody UserRequest userRequest,
             @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
         checkOwnerOrAdminAccess(roles, requesterUsername, id);
@@ -120,6 +126,18 @@ public class UserController {
             @RequestHeader(value = "X-User-Roles", required = false) String roles) {
         checkAdminAccess(roles);
         userService.deactivateUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        userService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        userService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok().build();
     }
 }

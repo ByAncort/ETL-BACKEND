@@ -5,14 +5,15 @@ import httpx
 from fastapi import HTTPException
 from starlette import status
 
-from app.models import ConnectionResponse, SchemaMatchRequest
-from app.services import IntegrationClient, ApiRegistryClient, LlmConfigClient, SchemaMatchClient
+from app.models import ConnectionResponse, SchemaMatchRequest, EtlResponse
+from app.services import IntegrationClient, ApiRegistryClient, LlmConfigClient, SchemaMatchClient, SaveDataClient
 from app.services.matchingService import MatchingService
 
 integration_client = IntegrationClient()
 api_registry_client = ApiRegistryClient()
 llm_config_client = LlmConfigClient()
 schema_match_client = SchemaMatchClient()
+save_data_client = SaveDataClient()
 
 
 class DataService:
@@ -47,13 +48,24 @@ class DataService:
         data_b = await self.fetch_api_data(api_b_id)
 
         matching = MatchingService()
-        return await matching.match_and_register(
+        match_result = await matching.match_and_register(
             integration_id=integration_id,
             data_a=data_a,
             data_b=data_b,
             api_a_def=api_a_def,
             api_b_def=api_b_def,
         )
+
+        etl_result = None
+        try:
+            etl_result = await save_data_client.run_etl(integration_id)
+        except Exception as e:
+            etl_result = {"error": f"{type(e).__name__}: {e}"}
+
+        return {
+            **match_result,
+            "etl": etl_result.model_dump(mode="json") if isinstance(etl_result, EtlResponse) else etl_result,
+        }
 
     async def register_schema_match(self, request: SchemaMatchRequest) -> dict:
         response = await schema_match_client.create_match(request)

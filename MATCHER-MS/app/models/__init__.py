@@ -1,5 +1,5 @@
 from .schemas import ConnectionResponse, ApiRegistryResponse, \
-    LlmConfigResponse, SchemaMatchRequest, SchemaMatchResponse
+    LlmConfigResponse, SchemaMatchRequest, SchemaMatchResponse, EtlResponse
 
 __all__ = [
     "ConnectionResponse",
@@ -7,4 +7,5 @@ __all__ = [
     "LlmConfigResponse",
     "SchemaMatchRequest",
     "SchemaMatchResponse",
+    "EtlResponse",
 ]

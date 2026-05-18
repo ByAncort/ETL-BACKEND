@@ -221,6 +221,7 @@ services:
       - API_REGISTRY_MS_URL=http://api-register-ms:8083
       - SCHEMA_MATCHING_MS_URL=http://schema-matching-ms:8085
       - LLM_CONFIG_MS_URL=http://etl-config-llm:8086
+      - SAVE_DATA_MS_URL=http://ms-save-data:8001
     ports:
       - "8000:8000"
     depends_on:
@@ -228,6 +229,7 @@ services:
       - api-register-ms
       - schema-matching-ms
       - etl-config-llm
+      - ms-save-data
     networks:
       - swiggy-network
 

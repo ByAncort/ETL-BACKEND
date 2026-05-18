@@ -1,7 +1,7 @@
 import os
 import httpx
 from app.models import ConnectionResponse, ApiRegistryResponse, \
-    LlmConfigResponse, SchemaMatchRequest, SchemaMatchResponse
+    LlmConfigResponse, SchemaMatchRequest, SchemaMatchResponse, EtlResponse
 
 
 class IntegrationClient:
@@ -58,3 +58,15 @@ class SchemaMatchClient:
             response = await client.post(url, json=payload)
             response.raise_for_status()
             return [SchemaMatchResponse(**item) for item in response.json()]
+
+
+class SaveDataClient:
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv("SAVE_DATA_MS_URL", "http://localhost:8001")
+
+    async def run_etl(self, integration_id: int) -> EtlResponse:
+        url = f"{self.base_url}/api/etl/run/{integration_id}"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url)
+            response.raise_for_status()
+            return EtlResponse(**response.json())

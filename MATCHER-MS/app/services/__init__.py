@@ -1,4 +1,4 @@
-from .clients import IntegrationClient, ApiRegistryClient, LlmConfigClient, SchemaMatchClient
+from .clients import IntegrationClient, ApiRegistryClient, LlmConfigClient, SchemaMatchClient, SaveDataClient
 from .llmService import LlmService
 from .matchingService import MatchingService
 
@@ -7,6 +7,7 @@ __all__ = [
     "ApiRegistryClient",
     "LlmConfigClient",
     "SchemaMatchClient",
+    "SaveDataClient",
     "LlmService",
     "MatchingService",
 ]

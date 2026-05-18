@@ -16,9 +16,24 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: diego2005cortes@gmail.com
+    password: cgxs xunt rpbg vslw
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 identity:
   service:
     url: ${IDENTITY_SERVICE_URL:http://identity-service:9898/api/v1/auth}
+
+app:
+  base-url: http://localhost:9090
 eureka:
   client:
     service-url:
