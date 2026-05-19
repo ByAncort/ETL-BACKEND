@@ -30,6 +30,12 @@ public class UserController {
         }
     }
 
+    private void checkModeratorAccess(String roles) {
+        if (roles == null || !roles.contains("ROLE_MODERATOR")) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied: Requires ROLE_MODERATOR");
+        }
+    }
+
     private void checkOwnerOrAdminAccess(String roles, String requesterUsername, Long targetId) {
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
         if (isAdmin) return;
@@ -97,8 +103,15 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
             @PathVariable Long id,
-            @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        checkAdminAccess(roles);
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
+        checkModeratorAccess(roles);
+
+        UserResponse targetUser = userService.getUserById(id);
+        if (requesterUsername != null && requesterUsername.equals(targetUser.getUsername())) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied: You cannot delete yourself");
+        }
+
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
@@ -108,6 +121,7 @@ public class UserController {
         // This endpoint might be called by external validation link, or by admin
         // For now, let's allow it as it's an email verification
         userService.verifyEmail(id);
+        userService.activateUser(id);
         return ResponseEntity.ok().build();
     }
 
@@ -117,6 +131,7 @@ public class UserController {
             @RequestHeader(value = "X-User-Roles", required = false) String roles) {
         checkAdminAccess(roles);
         userService.activateUser(id);
+        userService.verifyEmail(id);
         return ResponseEntity.ok().build();
     }
 

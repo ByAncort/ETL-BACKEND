@@ -9,20 +9,24 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/user-roles")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class UserRoleController {
 
     private final UserRoleService userRoleService;
 
     @PostMapping("/assign")
-    public ResponseEntity<Void> assignRoleToUser(@RequestBody AssignRoleRequest request) {
-        userRoleService.assignRoleToUser(request);
+    public ResponseEntity<Void> assignRoleToUser(
+            @RequestBody AssignRoleRequest request,
+            @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
+        userRoleService.assignRoleToUser(request, requesterUsername);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/remove")
-    public ResponseEntity<Void> removeRoleFromUser(@RequestParam Long userId, @RequestParam Long roleId) {
-        userRoleService.removeRoleFromUser(userId, roleId);
+    public ResponseEntity<Void> removeRoleFromUser(
+            @RequestParam Long userId,
+            @RequestParam Long roleId,
+            @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
+        userRoleService.removeRoleFromUser(userId, roleId, requesterUsername);
         return ResponseEntity.noContent().build();
     }
 }

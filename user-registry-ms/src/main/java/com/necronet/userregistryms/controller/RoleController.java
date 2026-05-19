@@ -12,16 +12,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("/api/users/roles")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class RoleController {
 
     private final RoleService roleService;
 
     @PostMapping
-    public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest roleRequest) {
-        RoleResponse response = roleService.createRole(roleRequest);
+    public ResponseEntity<RoleResponse> createRole(
+            @Valid @RequestBody RoleRequest roleRequest,
+            @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
+        RoleResponse response = roleService.createRole(roleRequest, requesterUsername);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -44,14 +45,19 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RoleResponse> updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequest roleRequest) {
-        RoleResponse response = roleService.updateRole(id, roleRequest);
+    public ResponseEntity<RoleResponse> updateRole(
+            @PathVariable Long id,
+            @Valid @RequestBody RoleRequest roleRequest,
+            @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
+        RoleResponse response = roleService.updateRole(id, roleRequest, requesterUsername);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
-        roleService.deleteRole(id);
+    public ResponseEntity<Void> deleteRole(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
+        roleService.deleteRole(id, requesterUsername);
         return ResponseEntity.noContent().build();
     }
 }

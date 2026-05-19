@@ -139,18 +139,20 @@ UserRole userRole = new UserRole();
 
     @Transactional
     public void deleteUser(Long id) {
-
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("User not found with id: " + id);
         }
 
-
         List<UserRole> userRoles = userRoleRepository.findByUsuarioId(id);
+        boolean isModerator = userRoles.stream().anyMatch(ur -> ur.getRolId() == 3L);
+        if (isModerator) {
+            throw new RuntimeException("Cannot delete a user with ROLE_MODERATOR");
+        }
+
         if (!userRoles.isEmpty()) {
             userRoleRepository.deleteAll(userRoles);
             log.info("Deleted {} roles for user id: {}", userRoles.size(), id);
         }
-
 
         userRepository.deleteById(id);
         log.info("User deleted with id: {}", id);

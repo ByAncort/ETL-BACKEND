@@ -50,7 +50,7 @@ spring:
         - id: user-registry-ms
           uri: lb://USER-REGISTRY-MS
           predicates:
-            - Path=/api/users/**
+            - Path=/api/users/**,/api/user-roles/**
           filters:
             - RateLimitFilter
             - AuthenticationFilter
@@ -58,8 +58,7 @@ spring:
         - id: user-registry-ms-public
           uri: lb://USER-REGISTRY-MS
           predicates:
-            - Path=/api/users/register
-            - Path=/api/users/login
+            - Path=/api/users/register,/api/users/login
           filters:
             - RateLimitFilter
 
