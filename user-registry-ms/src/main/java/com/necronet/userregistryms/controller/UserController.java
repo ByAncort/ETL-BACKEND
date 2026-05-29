@@ -23,6 +23,16 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final com.necronet.userregistryms.service.UserStatusObserverService userStatusObserverService;
+
+    @GetMapping(value = "/username/{username}/observe", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter observeUser(
+            @PathVariable String username,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-User-Name", required = false) String requesterUsername) {
+        checkOwnerOrAdminAccessByUsername(roles, requesterUsername, username);
+        return userStatusObserverService.addObserver(username);
+    }
 
     private void checkAdminAccess(String roles) {
         if (roles == null || !roles.contains("ROLE_ADMIN")) {

@@ -34,6 +34,7 @@ public class UserService {
     private final IdentityServiceClient identityServiceClient;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final UserStatusObserverService userStatusObserverService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Value("${app.base-url}")
@@ -197,6 +198,10 @@ UserRole userRole = new UserRole();
         } catch (Exception e) {
             log.error("Error al deshabilitar login de Usuario: {} error: {}", user.getUsername(), e.getMessage());
         }
+        
+        // Patrón Observer: notificar al frontend para cerrar sesión
+        userStatusObserverService.notifyDeactivation(user.getUsername());
+        
         log.info("User deactivated for: {}", user.getUsername());
     }
 

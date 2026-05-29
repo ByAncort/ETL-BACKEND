@@ -39,21 +39,25 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 return chain.filter(exchange);
             }
 
-            // Get authorization header
+            // Get authorization header or query parameter
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            String tokenParam = request.getQueryParams().getFirst("token");
+            
             log.debug("Authorization header: {}", authHeader != null ? "present" : "missing");
+            
+            String token = null;
 
-            if (authHeader == null || authHeader.trim().isEmpty()) {
-                log.warn("Missing authorization header for path: {}", path);
-                return onError(exchange, "Missing authorization header", HttpStatus.UNAUTHORIZED);
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7).trim();
+            } else if (tokenParam != null && !tokenParam.trim().isEmpty()) {
+                token = tokenParam.trim();
             }
 
-            if (!authHeader.startsWith("Bearer ")) {
-                log.warn("Invalid authorization header format for path: {}", path);
-                return onError(exchange, "Invalid authorization header format", HttpStatus.UNAUTHORIZED);
+            if (token == null || token.isEmpty()) {
+                log.warn("Missing authorization header or token param for path: {}", path);
+                return onError(exchange, "Missing authorization header or token", HttpStatus.UNAUTHORIZED);
             }
 
-            String token = authHeader.substring(7).trim();
             log.debug("Token extracted, validating...");
 
             try {
