@@ -5,6 +5,7 @@ from starlette import status
 from app.models import SchemaMatchRequest, ApiRegistryResponse
 from app.services import LlmConfigClient, SchemaMatchClient
 from app.services.llmService import LlmService
+from app.services.semanticService import SemanticService
 
 llm_config_client = LlmConfigClient()
 schema_match_client = SchemaMatchClient()
@@ -68,14 +69,26 @@ class MatchingService:
         fields_a = self._extract_fields(data_a, api_a_def)
         fields_b = self._extract_fields(data_b, api_b_def)
 
-        llm_config = await llm_config_client.get_default_model()
-        llm = LlmService(
-            base_url=llm_config.baseUrl,
-            api_key=llm_config.apiKey,
-            model_name=llm_config.modelName or "gpt-4",
-        )
+        raw_matches = None
+        model_used = None
 
-        raw_matches = await llm.match_fields(fields_a, fields_b)
+        try:
+            llm_config = await llm_config_client.get_default_model()
+            if llm_config and llm_config.baseUrl and llm_config.apiKey:
+                llm = LlmService(
+                    base_url=llm_config.baseUrl,
+                    api_key=llm_config.apiKey,
+                    model_name=llm_config.modelName or "gpt-4",
+                )
+                raw_matches = await llm.match_fields(fields_a, fields_b)
+                model_used = {"provider": llm_config.provider, "modelName": llm_config.modelName}
+        except Exception as e:
+            print(f"LLM no disponible, usando semantic-matcher: {type(e).__name__}: {e}")
+
+        if raw_matches is None:
+            semantic = SemanticService()
+            raw_matches = await semantic.match_fields(fields_a, fields_b)
+            model_used = {"provider": "semantic-model", "modelName": "ensemble-v3.2.5"}
 
         requests = []
         for m in raw_matches:
@@ -96,9 +109,6 @@ class MatchingService:
         return {
             "sourceFields": fields_a,
             "targetFields": fields_b,
-            "modelUsed": {
-                "provider": llm_config.provider,
-                "modelName": llm_config.modelName,
-            },
+            "modelUsed": model_used,
             "matches": registered,
         }

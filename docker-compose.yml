@@ -211,6 +211,29 @@ services:
     networks:
       - swiggy-network
 
+  semantic-model-api:
+    build:
+      context: ./SEMANTIC_MODEL
+      dockerfile: Dockerfile
+      network: host
+    container_name: semantic-field-matcher
+    ports:
+      - "8021:8000"
+    environment:
+      - CUDA_VISIBLE_DEVICES=-1
+      - TF_CPP_MIN_LOG_LEVEL=3
+      - TF_ENABLE_ONEDNN_OPTS=0
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - swiggy-network
+
   matcher-ms:
     build:
       context: ./MATCHER-MS
@@ -222,6 +245,7 @@ services:
       - SCHEMA_MATCHING_MS_URL=http://schema-matching-ms:8085
       - LLM_CONFIG_MS_URL=http://etl-config-llm:8086
       - SAVE_DATA_MS_URL=http://ms-save-data:8001
+      - SEMANTIC_MODEL_URL=http://semantic-model-api:8000
     ports:
       - "8000:8000"
     depends_on:
@@ -229,6 +253,7 @@ services:
       - api-register-ms
       - schema-matching-ms
       - etl-config-llm
+      - semantic-model-api
       - ms-save-data
     networks:
       - swiggy-network

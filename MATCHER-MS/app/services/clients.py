@@ -60,6 +60,18 @@ class SchemaMatchClient:
             return [SchemaMatchResponse(**item) for item in response.json()]
 
 
+class SemanticModelClient:
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv("SEMANTIC_MODEL_URL", "http://localhost:8002")
+
+    async def predict_batch(self, pairs: list[list[str]]) -> dict:
+        url = f"{self.base_url}/predict-batch"
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(url, json={"pairs": pairs})
+            response.raise_for_status()
+            return response.json()
+
+
 class SaveDataClient:
     def __init__(self, base_url: str = None):
         self.base_url = base_url or os.getenv("SAVE_DATA_MS_URL", "http://localhost:8001")

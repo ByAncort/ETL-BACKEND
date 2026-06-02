@@ -61,4 +61,10 @@ public class IntegrationController {
         integrationService.deleteIntegration(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/connections/{id}/run-matching")
+    public ResponseEntity<Object> runMatching(@PathVariable Long id) {
+        Object result = integrationService.runMatching(id);
+        return ResponseEntity.ok(result);
+    }
 }

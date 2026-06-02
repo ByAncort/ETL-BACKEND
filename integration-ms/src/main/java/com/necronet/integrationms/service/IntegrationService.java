@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -107,6 +108,30 @@ public class IntegrationService {
         } catch (Exception e) {
             log.error("Error validating API ID: {}", apiId, e);
             throw new RuntimeException("Invalid API ID: " + apiId);
+        }
+    }
+
+    public Object runMatching(Long id) {
+        Integration integration = integrationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Integration not found with id: " + id));
+
+        if (integration.getStatus() == IntegrationStatus.DELETED) {
+            integration.setStatus(IntegrationStatus.ACTIVE);
+            integrationRepository.save(integration);
+        }
+
+        try {
+            String url = apiMatcherIA + "/run-matching/" + id;
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, null, Map.class);
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Matcher returned error for integration: " + id);
+            }
+
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Error re-running matcher for integration ID: {}", id, e);
+            throw new RuntimeException("Failed to run matcher for integration: " + id, e);
         }
     }
 
