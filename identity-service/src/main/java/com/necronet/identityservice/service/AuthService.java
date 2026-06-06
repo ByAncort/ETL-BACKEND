@@ -51,7 +51,21 @@ public class AuthService {
     }
 
     public boolean validateToken(String token) {
-        return jwtService.validateToken(token);
+        // Firma valida, no expirado y no en blacklist (logout).
+        if (!jwtService.validateToken(token)) {
+            return false;
+        }
+        // Ademas, la cuenta debe seguir activa: al desactivar un usuario su
+        // sesion vigente debe cerrarse en la siguiente peticion, no solo
+        // bloquear nuevos logins.
+        try {
+            String username = jwtService.extractUsername(token);
+            return repository.findByUsername(username)
+                    .map(UserCredential::isEnabled)
+                    .orElse(false);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean validateRefreshToken(String refreshToken, String username) {

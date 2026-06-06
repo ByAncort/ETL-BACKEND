@@ -7,6 +7,7 @@ import com.necronet.apiregisterms.dto.TestRequest;
 import com.necronet.apiregisterms.dto.TestResponse;
 import com.necronet.apiregisterms.entity.*;
 import com.necronet.apiregisterms.repository.*;
+import com.necronet.apiregisterms.util.UrlNormalizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -209,7 +210,7 @@ public class ApiService {
             if (body == null && endpoint.getBody() != null) body = endpoint.getBody();
         }
 
-        String fullUrl = baseUrl + pathParams + queryParams;
+        String fullUrl = com.necronet.apiregisterms.util.UrlNormalizer.join(baseUrl, pathParams) + queryParams;
         org.springframework.http.HttpMethod httpMethod = org.springframework.http.HttpMethod.valueOf(methodName.toUpperCase());
 
         TestResponse response = executeHttpRequest(httpMethod, fullUrl, api, body, methodName);
@@ -642,19 +643,20 @@ public class ApiService {
     }
 
     private String buildFullUrl(Apis api) {
-        StringBuilder url = new StringBuilder(api.getUrl());
-        
-        if (api instanceof ApiEndpoint) {
-            ApiEndpoint endpoint = (ApiEndpoint) api;
+        String base = api.getUrl();
+        String path = "";
+        String query = "";
+
+        if (api instanceof ApiEndpoint endpoint) {
             if (endpoint.getPathParams() != null) {
-                url.append(endpoint.getPathParams());
+                path = endpoint.getPathParams();
             }
             if (endpoint.getQueryParams() != null) {
-                url.append(endpoint.getQueryParams());
+                query = endpoint.getQueryParams();
             }
         }
-        
-        return url.toString();
+
+        return UrlNormalizer.join(base, path) + query;
     }
 
     private Apis createApiEntity(ApiRegisterRequest request) {

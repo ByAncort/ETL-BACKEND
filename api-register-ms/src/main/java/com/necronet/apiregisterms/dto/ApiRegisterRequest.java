@@ -1,6 +1,7 @@
 package com.necronet.apiregisterms.dto;
 
 import com.necronet.apiregisterms.entity.AuthType;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,10 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiRegisterRequest {
+    @NotBlank(message = "method is required")
     private String method;
+
+    @NotBlank(message = "url is required")
     private String url;
     private String description;
     private String pathParams;

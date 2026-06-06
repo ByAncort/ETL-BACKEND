@@ -7,6 +7,7 @@ import com.necronet.apiregisterms.dto.TestRequest;
 import com.necronet.apiregisterms.dto.TestResponse;
 import com.necronet.apiregisterms.entity.Apis;
 import com.necronet.apiregisterms.service.ApiService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class ApiController {
     private final ApiService apiService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse> registerApi(@RequestBody ApiRegisterRequest request) {
+    public ResponseEntity<ApiResponse> registerApi(@Valid @RequestBody ApiRegisterRequest request) {
         Apis savedApi = apiService.registerApi(request);
         return ResponseEntity.ok(apiService.toResponse(savedApi));
     }
