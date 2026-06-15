@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, qa, dev, fix-**]
+  pull_request:
+    branches: [main, qa]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - identity-service
+          - user-registry-ms
+          - api-register-ms
+          - integration-ms
+          - schema-matching-ms
+          - ETL-CONFIG-LLM-MS
+          - demo
+          - swiggy-gateway
+          - swiggy-service-registry
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+      - name: Run tests (${{ matrix.service }})
+        working-directory: ${{ matrix.service }}
+        run: chmod +x mvnw && ./mvnw test -B
