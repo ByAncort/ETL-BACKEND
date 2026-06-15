@@ -42,7 +42,8 @@ public class ExecutionLog {
     @Column(name = "message", nullable = false, length = 1000)
     private String message;
 
-    @Column(name = "detail", columnDefinition = "LONGTEXT")
+    @Lob
+    @Column(name = "detail")
     private String detail;
 
     @Column(name = "timestamp", nullable = false)
