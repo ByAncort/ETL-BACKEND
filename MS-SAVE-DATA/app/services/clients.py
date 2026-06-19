@@ -56,7 +56,7 @@ class LogClient:
         self.base_url = base_url or os.getenv("INTEGRATION_MS_URL", "http://localhost:8082")
 
     async def send_log(self, log_data: dict):
-        url = f"{self.base_url}/api/logs"
+        url = f"{self.base_url}/api/integrations/logs"
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 await client.post(url, json=log_data)

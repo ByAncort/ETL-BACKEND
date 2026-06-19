@@ -32,6 +32,33 @@ class EtlOrchestrator:
         }
         await self.log_client.send_log(log_data)
 
+    async def _send_completion_log(self, integration_id: int, summary: EtlResponse, duration_ms: float):
+        """Notifica al log service central que el proceso ETL async terminó.
+
+        Antes solo se notificaban los errores; el fin exitoso quedaba invisible
+        para el servicio de logs. Esto cumple el requisito "notificar fin".
+        """
+        level = "WARN" if summary.errors else "INFO"
+        log_data = {
+            "serviceName": "ms-save-data",
+            "className": "EtlOrchestrator",
+            "methodName": "run_etl",
+            "logLevel": level,
+            "message": (
+                f"[ETL] Proceso finalizado para integrationId={integration_id}: "
+                f"{summary.loadedRecords}/{summary.totalRecords} cargados, "
+                f"{len(summary.errors)} errores"
+            ),
+            "detail": (
+                f"totalRecords={summary.totalRecords}, "
+                f"transformedRecords={summary.transformedRecords}, "
+                f"loadedRecords={summary.loadedRecords}"
+            ),
+            "durationMs": int(duration_ms * 1000),
+            "integrationId": str(integration_id),
+        }
+        await self.log_client.send_log(log_data)
+
     async def run_etl(self, integration_id: int) -> EtlResponse:
         start = time.time()
         errors = []
@@ -180,7 +207,7 @@ class EtlOrchestrator:
             for i, err in enumerate(errors):
                 logger.error(f"[ETL] Error #%d: %s", i + 1, err)
 
-        return EtlResponse(
+        summary = EtlResponse(
             integrationId=integration_id,
             sourceApiId=source_api_id,
             targetApiId=target_api_id,
@@ -189,3 +216,7 @@ class EtlOrchestrator:
             loadedRecords=loaded_count,
             errors=errors,
         )
+
+        await self._send_completion_log(integration_id, summary, total_time)
+
+        return summary
