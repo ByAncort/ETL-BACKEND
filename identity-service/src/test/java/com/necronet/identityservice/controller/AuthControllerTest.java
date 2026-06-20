@@ -6,6 +6,7 @@ import com.necronet.identityservice.dto.UpdateEmailRequest;
 import com.necronet.identityservice.dto.UpdatePasswordRequest;
 import com.necronet.identityservice.service.AuthService;
 import com.necronet.identityservice.service.JwtService;
+import com.necronet.identityservice.service.SessionLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,9 @@ class AuthControllerTest {
 
     @MockBean
     private AuthenticationManager authenticationManager;
+
+    @MockBean
+    private SessionLogService sessionLogService;
 
     @Test
     void registerUser_shouldReturn201() throws Exception {
