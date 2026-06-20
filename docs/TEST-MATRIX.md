@@ -8,10 +8,13 @@
 | Java | 21 |
 | JUnit | 5 |
 | Mockito | 5 |
-| Total tests | 388 |
-| Passing | 388 |
+| Python | 3.11 |
+| pytest | 9.1 |
+| httpx | 0.28 |
+| Total tests | 512 |
+| Passing | 512 |
 | Failing | 0 |
-| Última Actualización | 2026-06-19 |
+| Última Actualización | 2026-06-20 |
 
 ---
 
@@ -107,6 +110,34 @@
 | Test class | Layer | Tests | Covers |
 |-----------|-------|-------|--------|
 | `SwiggyServiceRegistryApplicationTests` | Context | 1 | Application context loads |
+
+---
+
+## MS-SAVE-DATA (62 tests)
+
+| Test class | Layer | Tests | Covers |
+|-----------|-------|-------|--------|
+| `test_clients.py` | Client | 2 | LogClient — post + error propagation |
+| `test_clients_extended.py` | Client | 6 | IntegrationClient, ApiRegistryClient, SchemaMatchClient — get, post, test, send data |
+| `test_endpoints.py` | Controller | 4 | Health + RunEtl endpoint — 200/422/502 |
+| `test_etl_orchestrator.py` | Service | 8 | ETL phases order, summaries, partial error counts, log notification |
+| `test_extract_service.py` | Service | 8 | API def fetch, params/body injection, status/body validation, response wrapping |
+| `test_load_service.py` | Service | 18 | URL building, headers/auth, merge template, batch/individual load, error accumulation |
+| `test_transform_service.py` | Service | 16 | Field mapping, type coercion (int/float/bool/str), unknown transformation passthrough |
+
+---
+
+## MATCHER-MS (62 tests)
+
+| Test class | Layer | Tests | Covers |
+|-----------|-------|-------|--------|
+| `test_clients.py` | Client | 8 | IntegrationClient, ApiRegistryClient, LlmConfigClient, SchemaMatchClient, SemanticModelClient, SaveDataClient |
+| `test_data_service.py` | Service | 12 | Connection fetch, API data fetch + token refresh, pandas processing, schema registration, matching pipeline |
+| `test_endpoints.py` | Controller | 8 | Connection, API definition, default model, schema match CRUD, process integration, run matching — 200/422/502 |
+| `test_llm_service.py` | Service | 7 | URL build, LLM match fields — payload, response parse, error codes, JSON extraction |
+| `test_match_and_register.py` | Service | 4 | LLM path, semantic fallback, match registration |
+| `test_matching_service.py` | Service | 8 | Body schema extraction, response field extraction — list, wrapped, object, empty |
+| `test_semantic_service.py` | Service | 6 | Cartesian pairs, similarity filter, empty lists, error handling, base URL normalization |
 
 ---
 
