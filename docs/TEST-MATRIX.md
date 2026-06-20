@@ -1,5 +1,5 @@
 # Test Matrix
-> Inventario completo de pruebas automatizadas — 9 microservicios, 389 tests
+> Inventario completo de pruebas automatizadas — 9 MS Java (389) + 2 MS Python (124) = 513 tests
 
 | Propiedad | Valor |
 |-----------|-------|
