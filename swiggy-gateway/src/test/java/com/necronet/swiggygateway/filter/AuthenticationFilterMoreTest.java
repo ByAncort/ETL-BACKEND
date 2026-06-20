@@ -217,7 +217,8 @@ class AuthenticationFilterMoreTest {
 
             filter.filter(exchange, chain).block();
 
-            then(response).should().setStatusCode(any(HttpStatus.class));
+            then(response).should(never()).setStatusCode(any(HttpStatus.class));
+            then(chain).should().filter(exchange);
         }
     }
 }
