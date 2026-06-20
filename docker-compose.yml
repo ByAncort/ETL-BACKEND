@@ -40,9 +40,9 @@ services:
       - JWT_EXPIRATION=1800000
       - JWT_REFRESH_EXPIRATION=604800000
       # Usando swiggy-mysql para acceder a MySQL local
-      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1290
+      - SPRING_DATASOURCE_URL=jdbc:mysql://2.25.156.241:3306/etl_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=etl_user
+      - SPRING_DATASOURCE_PASSWORD=jdsau12341kasd
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - USER_REGISTRY_MS_URL=http://user-registry-ms:9090
       - JAVA_OPTS=-Xmx512m -Xms256m
@@ -89,9 +89,9 @@ services:
       dockerfile: Dockerfile
     container_name: swiggy-user-registry
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1290
+      - SPRING_DATASOURCE_URL=jdbc:mysql://2.25.156.241:3306/etl_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=etl_user
+      - SPRING_DATASOURCE_PASSWORD=jdsau12341kasd
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - IDENTITY_SERVICE_URL=http://identity-service:9898/api/v1/auth
       - JAVA_OPTS=-Xmx512m -Xms256m
@@ -120,9 +120,9 @@ services:
       - JAVA_OPTS=-Xmx512m -Xms256m
       - API_REGISTER_MS_URL=http://api-register-ms:8083
       - SCHEMA_MATCHING_MS_URL=http://matcher-ms:8000
-      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/registry_api?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1290
+      - SPRING_DATASOURCE_URL=jdbc:mysql://2.25.156.241:3306/etl_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=etl_user
+      - SPRING_DATASOURCE_PASSWORD=jdsau12341kasd
     ports:
       - "8082:8082"
     healthcheck:
@@ -144,9 +144,9 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - JAVA_OPTS=-Xmx512m -Xms256m
-      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/registry_api?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1290
+      - SPRING_DATASOURCE_URL=jdbc:mysql://2.25.156.241:3306/etl_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=etl_user
+      - SPRING_DATASOURCE_PASSWORD=jdsau12341kasd
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
     ports:
       - "8083:8083"
@@ -170,9 +170,9 @@ services:
       dockerfile: Dockerfile
     container_name: swiggy-schema-matching
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/schema_matching?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1290
+      - SPRING_DATASOURCE_URL=jdbc:mysql://2.25.156.241:3306/etl_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=etl_user
+      - SPRING_DATASOURCE_PASSWORD=jdsau12341kasd
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - EXTERNAL_API_BASE_URL=http://integration-ms:8082
       - JAVA_OPTS=-Xmx512m -Xms256m
@@ -199,9 +199,9 @@ services:
     container_name: swiggy-etl-config-llm
     environment:
       - SERVER_PORT=8086
-      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/llm_config_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1290
+      - SPRING_DATASOURCE_URL=jdbc:mysql://2.25.156.241:3306/etl_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=etl_user
+      - SPRING_DATASOURCE_PASSWORD=jdsau12341kasd
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
       - JAVA_OPTS=-Xmx512m -Xms256m
     ports:
