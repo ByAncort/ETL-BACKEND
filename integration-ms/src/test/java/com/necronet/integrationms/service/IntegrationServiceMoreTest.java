@@ -231,7 +231,7 @@ class IntegrationServiceMoreTest {
 
         assertThatThrownBy(() -> integrationService.runMatching(50L))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Matcher returned error");
+                .hasMessageContaining("Failed to run matcher");
     }
 
     @Test
