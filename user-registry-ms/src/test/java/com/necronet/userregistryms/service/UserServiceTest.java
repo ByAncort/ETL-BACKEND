@@ -194,6 +194,18 @@ class UserServiceTest {
         assertThat(resp.getUsername()).isEqualTo("johndoe");
     }
 
+    @Test
+    void getUserByUsername_whenUserNotFound_shouldThrow404() {
+        // Regresión MC-07: antes findUserByUsername=null -> NullPointerException (HTTP 500).
+        // Debe responder 404 NOT_FOUND. Detectado en QA Experiencia 3 (dashboard/login).
+        given(userRepository.findUserByUsername("fantasma")).willReturn(null);
+
+        assertThatThrownBy(() -> userService.getUserByUsername("fantasma"))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .extracting("statusCode")
+                .isEqualTo(org.springframework.http.HttpStatus.NOT_FOUND);
+    }
+
     // --- getAllUsers ---
 
     @Test

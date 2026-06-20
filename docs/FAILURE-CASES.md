@@ -5,7 +5,7 @@
 |-----------|-------|
 | Proyecto | ETL-BACKEND |
 | Rama | qa |
-| Última Actualización | 2026-06-19 |
+| Última Actualización | 2026-06-20 |
 
 ---
 
@@ -117,6 +117,20 @@
 
 ---
 
+## FC-10: `getUserByUsername` lanza NPE/500 cuando el usuario no existe
+
+| Campo | Detalle |
+|-------|---------|
+| Síntoma | El dashboard del front spammeaba `Error fetching user data: 500` en loop y el login de `identity-service` devolvía roles vacíos. `GET /api/users/username/{u}` respondía `500 Internal Server Error` para usuarios inexistentes en `user-registry-ms`. |
+| Archivo | `user-registry-ms/.../service/UserService.java:94` |
+| Causa | `findUserByUsername` retorna `null` (no `Optional`) cuando no hay match. `getUserByUsername` lo pasaba directo a `mapToResponse`, que invoca `user.getId()` → `NullPointerException` → 500. A diferencia de `getUserById`, no validaba el caso nulo. |
+| Resolución | Validar null y lanzar `ResponseStatusException(HttpStatus.NOT_FOUND)` (mismo patrón que el resto del controller). El front maneja el 404 con su `try/catch` sin romper el dashboard. |
+| Regresión | `UserServiceTest#getUserByUsername_whenUserNotFound_shouldThrow404` (rojo→verde: antes NPE, ahora 404) |
+| Detectado en | QA Experiencia 3 — flujo login + dashboard en navegador, config `etl_db` remota |
+| Commit | `c89ab09` (fix) |
+
+---
+
 ## Resumen por severidad
 
 | FC | Severidad | Tipo | Servicio |
@@ -130,3 +144,4 @@
 | FC-07 | Alta | Null safety + routing | swiggy-gateway |
 | FC-08 | Media | Configuración Docker | Todos |
 | FC-09 | Alta | Dependencias | swiggy-gateway + identity |
+| FC-10 | Alta | Null safety (NPE→404) | user-registry-ms |

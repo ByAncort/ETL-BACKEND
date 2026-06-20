@@ -1,5 +1,5 @@
 # Test Matrix
-> Inventario completo de pruebas automatizadas — 9 microservicios, 388 tests
+> Inventario completo de pruebas automatizadas — 9 microservicios, 389 tests
 
 | Propiedad | Valor |
 |-----------|-------|
@@ -8,10 +8,10 @@
 | Java | 21 |
 | JUnit | 5 |
 | Mockito | 5 |
-| Total tests | 388 |
-| Passing | 388 |
+| Total tests | 389 |
+| Passing | 389 |
 | Failing | 0 |
-| Última Actualización | 2026-06-19 |
+| Última Actualización | 2026-06-20 |
 
 ---
 
@@ -26,13 +26,13 @@
 
 ---
 
-## user-registry-ms (126 tests)
+## user-registry-ms (127 tests)
 
 | Test class | Layer | Tests | Covers |
 |-----------|-------|-------|--------|
 | `UserControllerTest` | Controller | 29 | CRUD users, search, activate/deactivate, pagination — success + 404 + 400 + 409 |
 | `RoleControllerTest` | Controller | 10 | CRUD roles, assign/unassign — success + duplicate + not found |
-| `UserServiceTest` | Service | 33 | CRUD, search, pagination, assign roles, activate/deactivate — all edge cases |
+| `UserServiceTest` | Service | 34 | CRUD, search, pagination, assign roles, activate/deactivate — all edge cases + `getUserByUsername` 404 cuando no existe (regresión FC-10) |
 | `RoleServiceTest` | Service | 18 | CRUD roles, findByName, pagination — success + duplicate + not found |
 | `UserRoleServiceTest` | Service | 14 | assign/unassign roles, get user roles, get role users — success + already assigned |
 | `UserRepositoryTest` | Repository | 13 | findByUsername/findByEmail/search/exists — custom queries + pagination |
@@ -117,3 +117,4 @@
 - **Eureka deshabilitado** en perfiles de test — warnings de connection refused son esperados e inofensivos
 - **3 entidades** modificadas en `api-register-ms` para compatibilidad H2: `ApiEndpoint`, `AuthCredential`, `ExecutionLog` (`columnDefinition` → `@Lob`)
 - Todos los servicios usan `mvnw.cmd` (Maven wrapper) — no requiere Maven global
+- **FC-10 (regresión)**: `UserServiceTest#getUserByUsername_whenUserNotFound_shouldThrow404` reproduce el defecto rojo→verde (NPE/500 → 404). Ver `docs/FAILURE-CASES.md`.
