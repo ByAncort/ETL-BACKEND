@@ -8,6 +8,8 @@ import com.necronet.identityservice.dto.UpdateEmailRequest;
 import com.necronet.identityservice.entity.UserCredential;
 import com.necronet.identityservice.service.AuthService;
 import com.necronet.identityservice.service.JwtService;
+import com.necronet.identityservice.service.SessionLogService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,7 @@ public class AuthController {
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final SessionLogService sessionLogService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
@@ -43,7 +46,9 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<AuthResponse> generateToken(@Valid @RequestBody AuthRequest authRequest) {
+    public ResponseEntity<AuthResponse> generateToken(
+            @Valid @RequestBody AuthRequest authRequest,
+            HttpServletRequest request) {
         try {
             Authentication authenticate = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -57,6 +62,11 @@ public class AuthController {
                 String accessToken = authService.generateToken(authenticatedUsername);
                 String refreshToken = authService.generateRefreshToken(authenticatedUsername);
                 Set<String> roles = jwtService.extractRoles(accessToken);
+
+                String ip = request.getRemoteAddr();
+                String userAgent = request.getHeader("User-Agent");
+                sessionLogService.logLogin(authenticatedUsername, accessToken, ip, userAgent);
+
                 return ResponseEntity.ok(new AuthResponse("Authentication successful", accessToken, refreshToken, roles));
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -99,7 +109,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String token) {
-        authService.invalidateToken(token.replace("Bearer ", ""));
+        String rawToken = token.replace("Bearer ", "");
+        sessionLogService.logLogout(rawToken);
+        authService.invalidateToken(rawToken);
         return ResponseEntity.ok(new AuthResponse("Logged out successfully", null));
     }
 
@@ -125,5 +137,10 @@ public class AuthController {
     public ResponseEntity<AuthResponse> updateEmail(@RequestBody UpdateEmailRequest request) {
         authService.updateEmail(request.getUsername(), request.getNewEmail());
         return ResponseEntity.ok(new AuthResponse("Email updated successfully", null));
+    }
+
+    @GetMapping("/sessions/{username}")
+    public ResponseEntity<?> getUserSessions(@PathVariable String username) {
+        return ResponseEntity.ok(sessionLogService.getSessionsByUsername(username));
     }
 }
