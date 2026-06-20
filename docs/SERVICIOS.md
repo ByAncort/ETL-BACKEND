@@ -1,18 +1,17 @@
-# Documentación de Servicios Disponibles
+# Servicios
+> Documentación de endpoints, DTOs y puertos de todos los microservicios
 
-## Tabla de Contenidos
-
-- [API Register MS](#api-register-ms)
-- [Identity Service](#identity-service)
-- [User Registry MS](#user-registry-ms)
-- [Integration MS](#integration-ms)
-- [Schema Matching MS](#schema-matching-ms)
+| Propiedad | Valor |
+|-----------|-------|
+| Proyecto | ETL-BACKEND |
+| Arquitectura | Microservicios Spring Boot |
+| Última Actualización | 2026-06-19 |
 
 ---
 
 ## API Register MS
 
-**Base URL:** `/api-registry`
+**Puerto:** `8083` | **Base URL:** `/api-registry`
 
 ### Endpoints
 
@@ -28,8 +27,6 @@
 
 ### DTOs
 
-#### Request DTOs
-
 **ApiRegisterRequest**
 ```json
 {
@@ -44,9 +41,7 @@
   "username": "user",
   "password": "pass",
   "tokenEndpoint": "https://api.example.com/oauth/token",
-  "headers": {
-    "Content-Type": "application/json"
-  },
+  "headers": { "Content-Type": "application/json" },
   "body": "{\"key\": \"value\"}",
   "apiAuth": null
 }
@@ -79,16 +74,13 @@
 }
 ```
 
-#### Response DTOs
-
-- `ApiResponse` - Respuesta de API
-- `TestResponse` - Respuesta de prueba
+**Responses:** `ApiResponse`, `TestResponse`
 
 ---
 
 ## Identity Service
 
-**Base URL:** `/api/v1/auth`
+**Puerto:** `9898` | **Base URL:** `/api/v1/auth`
 
 ### Endpoints
 
@@ -101,8 +93,6 @@
 | POST | `/api/v1/auth/logout` | Cerrar sesión |
 
 ### DTOs
-
-#### Request DTOs
 
 **RegisterRequest**
 ```json
@@ -121,17 +111,15 @@
 }
 ```
 
-#### Response DTOs
-
-- `AuthResponse` - Respuesta de autenticación (message, accessToken, refreshToken)
+**Responses:** `AuthResponse` (message, accessToken, refreshToken)
 
 ---
 
 ## User Registry MS
 
-### UserController
+**Puerto:** `9090`
 
-**Base URL:** `/api/users`
+### UserController — Base URL: `/api/users`
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -143,9 +131,7 @@
 | DELETE | `/api/users/{id}` | Eliminar usuario |
 | POST | `/api/users/{id}/verify-email` | Verificar email |
 
-### RoleController
-
-**Base URL:** `/api/roles`
+### RoleController — Base URL: `/api/roles`
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -155,9 +141,7 @@
 | PUT | `/api/roles/{id}` | Actualizar rol |
 | DELETE | `/api/roles/{id}` | Eliminar rol |
 
-### UserRoleController
-
-**Base URL:** `/api/user-roles`
+### UserRoleController — Base URL: `/api/user-roles`
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -165,8 +149,6 @@
 | DELETE | `/api/user-roles/remove` | Remover rol de usuario |
 
 ### DTOs
-
-#### Request DTOs
 
 **UserRequest**
 ```json
@@ -198,16 +180,13 @@
 }
 ```
 
-#### Response DTOs
-
-- `UserResponse` - Respuesta de usuario
-- `RoleResponse` - Respuesta de rol
+**Responses:** `UserResponse`, `RoleResponse`
 
 ---
 
 ## Integration MS
 
-**Base URL:** `/api/integrations`
+**Puerto:** `8082` | **Base URL:** `/api/integrations`
 
 ### Endpoints
 
@@ -221,8 +200,6 @@
 
 ### DTOs
 
-#### Request DTOs
-
 **IntegrationRequest**
 ```json
 {
@@ -232,17 +209,15 @@
 }
 ```
 
-#### Response DTOs
-
-- `IntegrationResponse` - Respuesta de integración
+**Responses:** `IntegrationResponse`
 
 ---
 
 ## Schema Matching MS
 
-### SchemaMatchController
+**Puerto:** `8085`
 
-**Base URL:** `/api/schema-matches`
+### SchemaMatchController — Base URL: `/api/schema-matches`
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -257,17 +232,13 @@
 | POST | `/api/schema-matches/feedback` | Agregar feedback |
 | GET | `/api/schema-matches/{id}/feedback` | Obtener feedback de un match |
 
-### IntegrationController
-
-**Base URL:** `/api/integrations`
+### IntegrationController — Base URL: `/api/integrations`
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/integrations/connections/{connectionId}` | Obtener conexión por ID |
 
 ### DTOs
-
-#### Request DTOs
 
 **SchemaMatchRequestDTO**
 ```json
@@ -291,18 +262,12 @@
 }
 ```
 
-#### Response DTOs
+**Responses:** `SchemaMatchResponseDTO`, `MatchFeedbackResponseDTO`, `ConnectionResponseDTO`
 
-- `SchemaMatchResponseDTO` - Respuesta de match
-- `MatchFeedbackResponseDTO` - Respuesta de feedback
-- `ConnectionResponseDTO` - Respuesta de conexión
-
----
-
-## Estados de Match (MatchStatus)
+### Estados de Match
 
 | Estado | Descripción |
-|-------|-------------|
+|--------|-------------|
 | PENDING | Pendiente de revisión |
 | APPROVED | Aprobado |
 | REJECTED | Rechazado |
@@ -310,9 +275,9 @@
 
 ---
 
-## ETL Config LLM MS
+## ETL-CONFIG-LLM MS
 
-**Base URL:** `/api/llm-configs`
+**Puerto:** `8086` | **Base URL:** `/api/llm-configs`
 
 ### Endpoints
 
@@ -328,8 +293,6 @@
 
 ### DTOs
 
-#### Request DTOs
-
 **LlmConfigRequest**
 ```json
 {
@@ -342,15 +305,13 @@
 }
 ```
 
-#### Response DTOs
-
-- `LlmConfigResponse` - Respuesta con los datos del LLM configurado
+**Responses:** `LlmConfigResponse`
 
 ---
 
-## Notas
+## Notas generales
 
-- Todos los endpoints soportan CORS cuando está habilitado (ver anotaciones `@CrossOrigin`)
+- Todos los endpoints soportan CORS cuando está habilitado (`@CrossOrigin`)
 - Algunos endpoints requieren autenticación via JWT token
-- Los IDs en los path son de tipo `Long`
-- Los valores de `authType` pueden ser: `NONE`, `BEARER`, `BASIC`, `API_KEY`, `OAUTH2`
+- Los IDs en path son de tipo `Long`
+- Valores de `authType`: `NONE`, `BEARER`, `BASIC`, `API_KEY`, `OAUTH2`

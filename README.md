@@ -4,9 +4,19 @@ Backend de microservicios para la plataforma web **ETL-MachingLearning**. Propor
 
 ---
 
+## Documentación
+
+| Documento | Descripción |
+|-----------|-------------|
+| [`docs/SERVICIOS.md`](docs/SERVICIOS.md) | Endpoints, DTOs y puertos de todos los microservicios |
+| [`docs/TEST-MATRIX.md`](docs/TEST-MATRIX.md) | Inventario completo de 388 tests automatizados |
+| [`docs/FAILURE-CASES.md`](docs/FAILURE-CASES.md) | Catálogo de fallos resueltos en QA con causa raíz |
+| [`docs/ETL_Automate_Validacion_Casos_de_Prueba.md`](docs/ETL_Automate_Validacion_Casos_de_Prueba.md) | Plan de pruebas Ciclo 1 — 33 casos, 144 pruebas |
+
+---
+
 ## Tabla de Contenidos
 
-- [Descripción General](#descripción-general)
 - [Arquitectura de Microservicios](#arquitectura-de-microservicios)
 - [Diagrama Entidad-Relación](#diagrama-entidad-relación)
 - [Flujo de Autenticación](#flujo-de-autenticación)

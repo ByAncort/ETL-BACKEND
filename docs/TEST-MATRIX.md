@@ -1,8 +1,17 @@
-# Test Matrix — ETL-BACKEND
+# Test Matrix
+> Inventario completo de pruebas automatizadas — 9 microservicios, 388 tests
 
-**Date:** 2026-06-14
-**Spring Boot:** 3.3.4 | **Java:** 21 | **JUnit:** 5 | **Mockito:** 5
-**Total tests:** 388 | **Passing:** 388 | **Failing:** 0
+| Propiedad | Valor |
+|-----------|-------|
+| Proyecto | ETL-BACKEND |
+| Spring Boot | 3.3.4 |
+| Java | 21 |
+| JUnit | 5 |
+| Mockito | 5 |
+| Total tests | 388 |
+| Passing | 388 |
+| Failing | 0 |
+| Última Actualización | 2026-06-19 |
 
 ---
 
@@ -14,6 +23,8 @@
 | `JwtServiceTest` | Service | 21 | generate/validate/refresh JWT — expired/malformed/invalid token edge cases |
 | `AuthServiceTest` | Service | 18 | register/authenticate/refresh/logout — success + wrong password + user not found |
 | `UserCredentialRepositoryTest` | Repository | 8 | findByUsername/findByEmail/existsByUsername/existsByEmail — found + not found |
+
+---
 
 ## user-registry-ms (126 tests)
 
@@ -27,6 +38,8 @@
 | `UserRepositoryTest` | Repository | 13 | findByUsername/findByEmail/search/exists — custom queries + pagination |
 | `PasswordResetTokenRepositoryTest` | Repository | 8 | findByToken/findByUser/deleteByUser — found + expired + not found |
 
+---
+
 ## api-register-ms (51 tests)
 
 | Test class | Layer | Tests | Covers |
@@ -35,6 +48,8 @@
 | `ApiServiceTest` | Service | 19 | CRUD, execute, search, pagination — success + not found + integration call |
 | `LogServiceTest` | Service | 10 | CRUD logs, findByApiId, pagination — success + empty results |
 | `ApisRepositoryTest` | Repository | 8 | CRUD, search, findByStatus, pagination — custom queries |
+
+---
 
 ## integration-ms (35 tests)
 
@@ -45,6 +60,8 @@
 | `IntegrationServiceTest` | Service | 16 | CRUD, execute, search, pagination — success + not found + edge cases |
 | `IntegrationRepositoryTest` | Repository | 3 | findByStatus, findBySource — custom queries |
 
+---
+
 ## schema-matching-ms (35 tests)
 
 | Test class | Layer | Tests | Covers |
@@ -52,6 +69,8 @@
 | `SchemaMatchControllerTest` | Controller | 13 | CRUD schema matches, execute matching — success + 404 + 400 |
 | `SchemaMatchServiceTest` | Service | 14 | CRUD, execute matching, search, pagination — success + not found |
 | `SchemaMatchRepositoryTest` | Repository | 7 | findBySourceType, findByTargetType, findByStatus — custom queries |
+
+---
 
 ## ETL-CONFIG-LLM-MS (30 tests)
 
@@ -61,6 +80,8 @@
 | `LlmConfigServiceTest` | Service | 16 | CRUD, pagination, default config — success + not found + edge cases |
 | `LlmConfigRepositoryTest` | Repository | 5 | findByProvider, findByIsDefault — custom queries |
 
+---
+
 ## demo (13 tests)
 
 | Test class | Layer | Tests | Covers |
@@ -68,6 +89,8 @@
 | `WorkspaceProjectControllerTest` | Controller | 4 | CRUD workspace projects — success + 404 |
 | `WorkspaceProjectServiceTest` | Service | 4 | CRUD — success + not found |
 | `WorkspaceProjectRepositoryTest` | Repository | 4 | CRUD — basic persistence |
+
+---
 
 ## swiggy-gateway (35 tests)
 
@@ -77,6 +100,8 @@
 | `RouteValidatorTest` | Filter | 13 | isSecured/isAdminOnly — open vs protected routes, admin routes |
 | `AuthenticationFilterTest` | Filter | 6 | filter chain with valid/invalid/missing token, admin role check |
 
+---
+
 ## swiggy-service-registry (1 test)
 
 | Test class | Layer | Tests | Covers |
@@ -85,10 +110,10 @@
 
 ---
 
-## Configuration Notes
+## Notas de configuración
 
-- **H2 in-memory database** used for all repository tests (`@DataJpaTest`)
-- **Test slices** (`@WebMvcTest`, `@DataJpaTest`) with `@MockBean` (Boot 3.3.x, NOT `@MockitoBean`)
-- **Eureka disabled** in test profiles where applicable — connection refused warnings are expected and harmless
-- **3 entity files** modified in `api-register-ms` for H2 compatibility: `ApiEndpoint`, `AuthCredential`, `ExecutionLog` (`columnDefinition` → `@Lob`)
-- All services use `mvnw.cmd` (Maven wrapper) — no global Maven install required
+- **H2 in-memory database** usada para todos los tests repository (`@DataJpaTest`)
+- **Test slices** (`@WebMvcTest`, `@DataJpaTest`) con `@MockBean` (Boot 3.3.x)
+- **Eureka deshabilitado** en perfiles de test — warnings de connection refused son esperados e inofensivos
+- **3 entidades** modificadas en `api-register-ms` para compatibilidad H2: `ApiEndpoint`, `AuthCredential`, `ExecutionLog` (`columnDefinition` → `@Lob`)
+- Todos los servicios usan `mvnw.cmd` (Maven wrapper) — no requiere Maven global
