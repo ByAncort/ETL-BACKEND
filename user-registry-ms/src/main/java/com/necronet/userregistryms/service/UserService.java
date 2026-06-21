@@ -92,8 +92,12 @@ UserRole userRole = new UserRole();
     }
 
     public UserResponse getUserByUsername(String username) {
-
-        return mapToResponse(userRepository.findUserByUsername(username));
+        User user = userRepository.findUserByUsername(username);
+        if (user == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND, "User not found: " + username);
+        }
+        return mapToResponse(user);
     }
 
 

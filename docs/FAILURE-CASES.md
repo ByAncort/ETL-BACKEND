@@ -5,7 +5,7 @@
 |-----------|-------|
 | Proyecto | ETL-BACKEND |
 | Rama | qa |
-| Última Actualización | 2026-06-19 |
+| Última Actualización | 2026-06-20 |
 
 ---
 
@@ -117,9 +117,21 @@
 
 ---
 
+## FC-10: `getUserByUsername` lanza NPE/500 cuando el usuario no existe
+
+| Campo | Detalle |
+|-------|---------|
+| Síntoma | El dashboard del front spammeaba `Error fetching user data: 500` en loop y el login de `identity-service` devolvía roles vacíos. `GET /api/users/username/{u}` respondía `500 Internal Server Error` para usuarios inexistentes en `user-registry-ms`. |
+| Archivo | `user-registry-ms/.../service/UserService.java:94` |
+| Causa | `findUserByUsername` retorna `null` (no `Optional`) cuando no hay match. `getUserByUsername` lo pasaba directo a `mapToResponse`, que invoca `user.getId()` → `NullPointerException` → 500. A diferencia de `getUserById`, no validaba el caso nulo. |
+| Resolución | Validar null y lanzar `ResponseStatusException(HttpStatus.NOT_FOUND)` (mismo patrón que el resto del controller). El front maneja el 404 con su `try/catch` sin romper el dashboard. |
+| Regresión | `UserServiceTest#getUserByUsername_whenUserNotFound_shouldThrow404` (rojo→verde: antes NPE, ahora 404) |
+| Detectado en | QA Experiencia 3 — flujo login + dashboard en navegador, config `etl_db` remota |
+| Commit | `c89ab09` (fix) |
+
 ---
 
-## FC-10: Aserción incorrecta en merge con record None
+## FC-11: Aserción incorrecta en merge con record None
 
 | Campo | Detalle |
 |-------|---------|
@@ -127,11 +139,11 @@
 | Archivo | `MS-SAVE-DATA/tests/test_load_service.py:238` |
 | Causa | `_merge_record_with_template` (L30-31) solo sobreescribe si `record[key] is not None`. Con `record["age"] = None`, el template `"age": 0` se conserva. El test asumía que None reemplazaba al template. |
 | Resolución | Cambiar `assert merged["age"] is None` → `assert merged["age"] == 0` |
-| Commit | `pending` |
+| Commit | `70e3dc2` |
 
 ---
 
-## FC-11: `raise_for_status` no-op en fake client de tests
+## FC-12: `raise_for_status` no-op en fake client de tests
 
 | Campo | Detalle |
 |-------|---------|
@@ -139,7 +151,7 @@
 | Archivo | `MATCHER-MS/tests/test_clients.py` |
 | Causa | `_FakeAsyncClient` definía `raise_for_status=lambda: None` como no-op, pero en realidad necesita lanzar `httpx.HTTPStatusError` cuando `status >= 400`. Además `get()` usaba `SimpleNamespace` sin `raise_for_status`. |
 | Resolución | Refactorizar a `_make_resp()` que asigna un closure `raise_for_status` que lanza `HTTPStatusError` si `status >= 400`. Aplica a GET y POST. |
-| Commit | `pending` |
+| Commit | `70e3dc2` |
 
 ---
 
@@ -156,5 +168,6 @@
 | FC-07 | Alta | Null safety + routing | swiggy-gateway |
 | FC-08 | Media | Configuración Docker | Todos |
 | FC-09 | Alta | Dependencias | swiggy-gateway + identity |
-| FC-10 | Baja | Test assertion | MS-SAVE-DATA |
-| FC-11 | Alta | Test double incompleto | MATCHER-MS |
+| FC-10 | Alta | Null safety (NPE→404) | user-registry-ms |
+| FC-11 | Baja | Test assertion | MS-SAVE-DATA |
+| FC-12 | Alta | Test double incompleto | MATCHER-MS |
